@@ -59,3 +59,38 @@ K3 is measured on the set.
 `ease-atlas`, after the anchor component. Checked free on GitHub, npm, and the
 21st.dev sitemap on 2026-10-09. Rejected: `motion-primitives` (an existing
 library of that name).
+
+## 2026-10-09 — Start now, not January
+Ryan asked why wait; the January date was a scheduling assumption, not evidence.
+His own share of the budget is 10–15 hours, about an hour a week, and an earlier
+start resolves the gates sooner. Rule added: any week the other standing
+commitment's hours are not logged is a week this project pauses.
+
+## 2026-10-09 — EaseAtlas has no runtime dependency; rides use the Web Animations API
+The engine evaluates every curve itself, so GSAP is not needed for the anchor
+(it enters with MaskReveal). WAAPI keeps the component to one self-contained
+file with no stylesheet or keyframe names, composites transforms only, and makes
+every ride seekable, which is what lets the probe pause an animation at exact
+times and measure it. Rejected: CSS `@keyframes` injected from the component
+(needs a style element and global names); GSAP for the ride (a dependency the
+anchor does not need).
+
+## 2026-10-09 — Repo mirrors the registry's Studio layout
+`src/components/ui/<slug>.tsx`, `src/demos/default.tsx`, `@/` → `src`. The CLI
+sends one self-contained component file and one demo, auto-detecting
+`demos/default.tsx`, so the repo's shape is the publish shape and nothing is
+rearranged at publish time. Verified against help.21st.dev on 2026-10-09.
+
+## 2026-10-09 — Sampling density is adaptive and shared
+64 stops unless the polyline through them misses the function by more than 0.5%
+at the midpoints; then 128, 256, 512. The glyph path, the `linear()` timing
+function and the copied `linear()` text all use the same stops, so the three
+cannot disagree. Found by the probe: bounce.out at 64 stops missed by 1.1% near
+its first bounce.
+
+## 2026-10-09 — Verification is measurement, not screenshots
+The probe pauses each cell's real animation in Chromium, seeks it to on-grid and
+off-grid times, reads the marker's computed transform and compares it with the
+parsed function; it includes a positive control that fails when a curve is
+compared with the wrong function, a reduced-motion check, a page-error check,
+and light/dark captures for the taste review. Screenshots are for judgment only.

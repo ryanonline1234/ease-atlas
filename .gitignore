@@ -4,3 +4,4 @@ preview/
 .21st-review/
 .env
 .DS_Store
+tests/__screens__/
