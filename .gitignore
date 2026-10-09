@@ -1,0 +1,6 @@
+node_modules/
+dist/
+preview/
+.21st-review/
+.env
+.DS_Store
