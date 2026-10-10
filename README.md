@@ -52,8 +52,16 @@ public-domain landscape attributed to Sesshū Tōyō (Honolulu Museum of Art).
 | `noiseScale` | `3` | Finer or coarser islands in the dissolve |
 | `dprCap` | `1.5` | Canvas device-pixel-ratio cap |
 
+| `inkColor` | theme foreground | CSS color of the ink at the front |
+| `pointerDevelops` | `true` | A fine pointer develops the print where it rests; off on touch and under reduced motion |
+| `onStation` | — | `(0 \| 1 \| 2) => void` when the station changes |
+| `scrollTo` | `window.scrollTo` | How the station rail scrolls; pass your Lenis instance's `scrollTo` when you run one |
+
 The score itself is data (`WINDOWS` in the component): a pair of h values per
-effect. Retiming is editing two numbers.
+effect. Retiming is editing two numbers. The station rail is a set of buttons
+that scroll to each station, and the front is tuned to read as ink, not fog:
+fine islands, a speckled edge, and a thin dark rim where the ink pools as it
+dries.
 
 ## EaseAtlas
 

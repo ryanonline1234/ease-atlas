@@ -198,6 +198,8 @@ uniform float uNoiseScale;
 uniform float uHasImage;
 uniform vec3 uPaper;
 uniform vec3 uInk;
+uniform vec2 uPointer;
+uniform float uPointerR;
 
 uint hashU(uvec2 p) {
   uint n = p.x * 1664525u ^ (p.y * 22695477u + 12345u);
@@ -245,16 +247,25 @@ void main() {
   float e = min(d.x, d.y) - uInset + brush;
   float frame = uInset <= 0.0005 ? 1.0 : smoothstep(0.0, 0.006, e);
 
-  float n = fbm(uv * vec2(aspect, 1.0) * uNoiseScale);
+  // the front: fbm islands plus a fine speckle so the edge breaks into droplets, not fog
+  vec2 q = uv * vec2(aspect, 1.0);
+  float n = fbm(q * uNoiseScale) + (vnoise(q * uNoiseScale * 9.0) - 0.5) * 0.07;
   float w = max(uFeather, 0.002) * 0.5;
-  float t = mix(-w - 0.02, 1.0 + w, uProgress);
+  float t = mix(-w - 0.03, 1.0 + w, uProgress);
+  // a fine pointer develops the print locally: a soft radial advance of the front
+  vec2 dp = (uv - uPointer) * vec2(aspect, 1.0);
+  float touch = uPointerR > 0.0 ? exp(-dot(dp, dp) / (uPointerR * uPointerR)) : 0.0;
+  t += touch * 0.28 * (1.0 - uProgress);
   float reveal = 1.0 - smoothstep(t - w, t + w, n);
-  float band = smoothstep(t - w * 1.8, t, n) * (1.0 - smoothstep(t, t + w * 0.4, n));
+  float band = smoothstep(t - w * 1.2, t, n) * (1.0 - smoothstep(t, t + w * 0.25, n));
+  // ink pools where it dries: a thin dark rim right at the front
+  float rim = 1.0 - smoothstep(0.0, w * 0.35, abs(n - t));
 
   float lum = dot(img, vec3(0.299, 0.587, 0.114));
   vec3 washed = mix(uPaper, mix(img, vec3(lum), 0.6), 0.45);
   vec3 col = mix(img, washed, uWash);
-  col = mix(col, uInk, band * 0.55 * (0.4 + 0.6 * uWash));
+  col = mix(col, uInk, band * 0.7 * (0.35 + 0.65 * uWash));
+  col *= 1.0 - rim * 0.45 * (0.5 + 0.5 * uWash);
   col += (hash2(uv * uResolution * 0.5) - 0.5) * uGrain * 0.12;
 
   // before the image develops, the sheet itself is faintly there: a wet-paper tone inside the frame
@@ -275,6 +286,8 @@ interface GLUniforms {
   noiseScale: number
   paper: [number, number, number]
   ink: [number, number, number]
+  pointer: [number, number]
+  pointerR: number
 }
 
 /** Raw WebGL2 wrapper: one quad, one program, one texture; renders on demand only. */
@@ -361,7 +374,7 @@ class InkGL {
     const aPos = gl.getAttribLocation(program, 'aPos')
     gl.enableVertexAttribArray(aPos)
     gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0)
-    for (const name of ['uTex', 'uResolution', 'uCover', 'uProgress', 'uInset', 'uWash', 'uScale', 'uFeather', 'uGrain', 'uNoiseScale', 'uHasImage', 'uPaper', 'uInk'])
+    for (const name of ['uTex', 'uResolution', 'uCover', 'uProgress', 'uInset', 'uWash', 'uScale', 'uFeather', 'uGrain', 'uNoiseScale', 'uHasImage', 'uPaper', 'uInk', 'uPointer', 'uPointerR'])
       this.loc.set(name, gl.getUniformLocation(program, name))
     this.tex = gl.createTexture()
     gl.bindTexture(gl.TEXTURE_2D, this.tex)
@@ -416,6 +429,8 @@ class InkGL {
     gl.uniform1f(this.loc.get('uNoiseScale')!, u.noiseScale)
     gl.uniform3f(this.loc.get('uPaper')!, ...u.paper)
     gl.uniform3f(this.loc.get('uInk')!, ...u.ink)
+    gl.uniform2f(this.loc.get('uPointer')!, ...u.pointer)
+    gl.uniform1f(this.loc.get('uPointerR')!, u.pointerR)
     gl.clearColor(0, 0, 0, 0)
     gl.clear(gl.COLOR_BUFFER_BIT)
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
@@ -439,6 +454,24 @@ class InkGL {
 }
 
 /* ----------------------------- component -------------------------------- */
+
+function resolveCssColor(v: string): [number, number, number] | null {
+  const direct = colorToRgb(v)
+  if (direct) return direct
+  try {
+    const cv = document.createElement('canvas')
+    cv.width = cv.height = 1
+    const ctx = cv.getContext('2d')
+    if (!ctx) return null
+    ctx.fillStyle = '#000'
+    ctx.fillStyle = v
+    ctx.fillRect(0, 0, 1, 1)
+    const d = ctx.getImageData(0, 0, 1, 1).data
+    return [d[0]! / 255, d[1]! / 255, d[2]! / 255]
+  } catch {
+    return null
+  }
+}
 
 function resolveColor(el: Element, prop: 'color' | 'backgroundColor'): [number, number, number] {
   const v = getComputedStyle(el)[prop]
@@ -487,12 +520,20 @@ export interface InkHeroProps {
   ease?: string
   /** Scroll travel in vh beyond the first screen. 300 ≈ three stations at a comfortable pace. */
   travel?: number
-  /** Dissolve edge softness, 0–0.5. */
+  /** Dissolve edge softness, 0–0.5. Lower is grittier ink; higher is fog. */
   feather?: number
   /** Paper grain, 0–1. */
   grain?: number
   /** Noise scale of the dissolve: larger = finer islands. */
   noiseScale?: number
+  /** CSS color for the ink at the front. Defaults to the theme's foreground color. */
+  inkColor?: string
+  /** A fine pointer develops the print locally where it rests. Off on coarse pointers and under reduced motion. */
+  pointerDevelops?: boolean
+  /** Called when the station changes (0 paper, 1 wash, 2 print). */
+  onStation?: (station: 0 | 1 | 2) => void
+  /** How the station rail scrolls the page; pass your Lenis instance's scrollTo when you run one. */
+  scrollTo?: (y: number) => void
   /** Device-pixel-ratio cap for the canvas. */
   dprCap?: number
   className?: string
@@ -519,9 +560,13 @@ export default function InkHero({
   nav = { brand: 'ease-atlas' },
   ease = 'ink',
   travel = 300,
-  feather = 0.18,
+  feather = 0.12,
   grain = 0.35,
-  noiseScale = 3,
+  noiseScale = 5,
+  inkColor,
+  pointerDevelops = true,
+  onStation,
+  scrollTo,
   dprCap = 1.5,
   className,
 }: InkHeroProps) {
@@ -539,8 +584,8 @@ export default function InkHero({
   const [glOk, setGlOk] = React.useState<boolean | null>(null)
   const lines = React.useMemo(() => splitLines(headline), [headline])
   const E = React.useMemo(() => resolveEase(ease), [ease])
-  const look = React.useRef({ feather, grain, noiseScale })
-  look.current = { feather, grain, noiseScale }
+  const look = React.useRef({ feather, grain, noiseScale, inkColor, onStation })
+  look.current = { feather, grain, noiseScale, inkColor, onStation }
 
   useGSAP(
     () => {
@@ -578,8 +623,11 @@ export default function InkHero({
       let ink: [number, number, number] = [0.1, 0.1, 0.1]
       const resolveTheme = () => {
         paper = resolveColor(el, 'backgroundColor')
-        ink = resolveColor(el, 'color')
+        const custom = look.current.inkColor ? resolveCssColor(look.current.inkColor) : null
+        ink = custom ?? resolveColor(el, 'color')
       }
+      const pointer: [number, number] = [-10, -10]
+      let pointerR = 0
       resolveTheme()
       let lastH = reduced ? 1 : 0
 
@@ -598,6 +646,7 @@ export default function InkHero({
           lastStation = v.station
           vars.station(v.station)
           if (rail) rail.dataset.station = String(v.station)
+          look.current.onStation?.(v.station)
         }
         setEyebrow((1 - v.eyebrow) * 101)
         setLines.forEach((set, i) => set((1 - (i === 0 ? v.line1 : i === 1 ? v.line2 : v.line2)) * 101))
@@ -606,7 +655,7 @@ export default function InkHero({
         setScrim(v.scrim)
         if (gl.ok) {
           const { feather: f, grain: g, noiseScale: ns } = look.current
-          gl.render({ progress: v.develop, inset: v.inset, wash: v.wash, scale: v.scale, feather: f, grain: g, noiseScale: ns, paper, ink })
+          gl.render({ progress: v.develop, inset: v.inset, wash: v.wash, scale: v.scale, feather: f, grain: g, noiseScale: ns, paper, ink, pointer, pointerR })
         }
       }
 
@@ -642,6 +691,24 @@ export default function InkHero({
       }
       scheme?.addEventListener?.('change', onScheme)
 
+      // ---- a fine pointer develops the print where it rests: render once per move, never a loop
+      const fine = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: fine)').matches
+      const onMove = (e: PointerEvent) => {
+        if (!gl.ok || reduced || !pointerDevelops || !fine) return
+        const r = stage.getBoundingClientRect()
+        pointer[0] = (e.clientX - r.left) / r.width
+        pointer[1] = 1 - (e.clientY - r.top) / r.height
+        pointerR = 0.11
+        paint(lastH)
+      }
+      const onLeave = () => {
+        if (pointerR === 0) return
+        pointerR = 0
+        paint(lastH)
+      }
+      stage.addEventListener('pointermove', onMove, { passive: true })
+      stage.addEventListener('pointerleave', onLeave, { passive: true })
+
       // ---- the one trigger. prefers-reduced-motion is a matchMedia condition so it reverts with the rest (§5.1)
       const mm = gsap.matchMedia()
       mm.add({ reduced: '(prefers-reduced-motion: reduce)', motion: '(prefers-reduced-motion: no-preference)' }, (ctx) => {
@@ -664,6 +731,8 @@ export default function InkHero({
       })
 
       return () => {
+        stage.removeEventListener('pointermove', onMove)
+        stage.removeEventListener('pointerleave', onLeave)
         mm.revert()
         ro.disconnect()
         mo.disconnect()
@@ -672,10 +741,19 @@ export default function InkHero({
         gl.dispose()
       }
     },
-    { scope: root, dependencies: [E, image.src, lines.length, dprCap, reduced] },
+    { scope: root, dependencies: [E, image.src, lines.length, dprCap, reduced, pointerDevelops] },
   )
 
   const stationLabels = ['paper', 'wash', 'print']
+  const goToStation = (i: number) => {
+    const el = root.current
+    const stage = stageRef.current
+    if (!el || !stage) return
+    const travelPx = Math.max(0, el.offsetHeight - stage.offsetHeight)
+    const y = Math.round(el.getBoundingClientRect().top + window.scrollY + (travelPx * i) / 2)
+    if (scrollTo) scrollTo(y)
+    else window.scrollTo({ top: y, behavior: 'smooth' })
+  }
 
   return (
     <section
@@ -790,14 +868,17 @@ export default function InkHero({
             </div>
           </div>
 
-          {/* station rail */}
-          <div ref={railRef} data-station="0" className="group hidden flex-col items-end gap-3 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground md:flex" aria-hidden="true">
+          {/* station rail: each stop is a button that scrolls the score there */}
+          <nav ref={railRef} data-station="0" aria-label="Stations" className="group hidden flex-col items-end gap-3 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground md:flex">
             {stationLabels.map((label, i) => (
-              <span
+              <button
                 key={label}
+                type="button"
                 data-dot={i}
+                aria-label={`Go to the ${label} station`}
+                onClick={() => goToStation(i)}
                 className={cn(
-                  'flex items-center gap-2 transition-opacity duration-300',
+                  'flex items-center gap-2 transition-opacity duration-300 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                   i === 0 && 'opacity-35 group-data-[station=0]:opacity-100',
                   i === 1 && 'opacity-35 group-data-[station=1]:opacity-100',
                   i === 2 && 'opacity-35 group-data-[station=2]:opacity-100',
@@ -805,9 +886,9 @@ export default function InkHero({
               >
                 {label}
                 <span className="block h-1.5 w-1.5 rounded-full bg-current" />
-              </span>
+              </button>
             ))}
-          </div>
+          </nav>
         </div>
       </div>
     </section>

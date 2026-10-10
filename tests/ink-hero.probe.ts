@@ -91,6 +91,40 @@ describe('ink hero: reduced motion is a finished, static page', () => {
   })
 })
 
+
+describe('ink hero: the station rail and the pointer', () => {
+  it('clicking a station button scrolls the score to that station', async () => {
+    const { page, errors } = await openPage(URL_LIGHT)
+    await page.getByRole('button', { name: 'Go to the wash station' }).click()
+    await page.waitForTimeout(1800)
+    const v = await readVars(page)
+    expect(v.progress).toBeCloseTo(0.5, 1)
+    await page.getByRole('button', { name: 'Go to the print station' }).click()
+    await page.waitForTimeout(1800)
+    expect((await readVars(page)).progress).toBeCloseTo(1, 1)
+    expect(errors).toEqual([])
+    await page.close()
+  })
+
+  it('a fine pointer over the wash changes what the canvas draws, and leaving restores it', async () => {
+    const { page } = await openPage(URL_LIGHT)
+    await page.evaluate(() => window.scrollTo(0, 1350))
+    await page.waitForTimeout(900)
+    const stage = page.locator('[data-motion="ink-stage"]')
+    const before = await stage.screenshot()
+    await page.mouse.move(720, 420)
+    await page.waitForTimeout(150)
+    const during = await stage.screenshot()
+    await page.mouse.move(5, 5)
+    await page.locator('[data-motion="ink-stage"]').dispatchEvent('pointerleave')
+    await page.waitForTimeout(150)
+    const after = await stage.screenshot()
+    expect(Buffer.compare(before, during)).not.toBe(0)
+    expect(Buffer.compare(before, after)).toBe(0)
+    await page.close()
+  })
+})
+
 describe('ink hero: captures for the taste review', () => {
   it('writes light and dark stills at the three stations', async () => {
     const fs = await import('node:fs')

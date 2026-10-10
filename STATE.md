@@ -25,7 +25,8 @@ git-connected: redeploy by hand after changes. No 21st.dev account yet; no npm.
    (`noiseScale`, `feather`, `grain` are live controls in the demo), the headline copy,
    and whether the paper-station sheet reads. Anything changed goes back through
    `npm test`, `npm run probe`, and the harness sample/assert.
-2. **Account and first publish (Ryan, with a parent aware of the under-16 disclaimer):**
+2. **Publish (Ryan is logged into the 21st CLI as ryanonline1234):** drafts are opened with
+   `--prepare --no-open`; Ryan reviews the CLI Review link, then:
    `npm i -g @21st-dev/cli` → `21st login` → `21st search "scroll hero ink"` →
    `21st render ./src/components/ui/ink-hero.tsx --demo ./src/demos/ink-hero/default.tsx --out ./preview --video`
    → `21st publish ./src/components/ui/ink-hero.tsx --description "…" --tags hero,scroll,webgl,gsap,ink --prepare --wait-video --media-dir .21st-review`

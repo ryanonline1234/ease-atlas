@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Lenis from 'lenis'
@@ -8,8 +8,11 @@ import InkHero from '@/components/ui/ink-hero'
 const settings = {
   ease: 'ink',
   travel: 300,
-  feather: 0.18,
+  feather: 0.12,
   grain: 0.35,
+  noiseScale: 5,
+  inkColor: '#1b1613',
+  pointerDevelops: true,
   smoothScroll: true,
   snapToStations: true,
   eyebrow: 'Sumi-e · a scroll score in three stations',
@@ -22,6 +25,7 @@ const settings = {
 
 /** Lenis on the window, driven by the GSAP ticker: the canonical four statements (scroll-architecture §1.1). Demo-only; the component never owns scroll. */
 function useSmoothScroll(enabled: boolean, snapToStations: boolean) {
+  const lenisRef = useRef<Lenis | null>(null)
   useEffect(() => {
     if (!enabled || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     gsap.registerPlugin(ScrollTrigger)
@@ -32,6 +36,7 @@ function useSmoothScroll(enabled: boolean, snapToStations: boolean) {
     gsap.ticker.add(tick)
     gsap.ticker.lagSmoothing(0)
     ;(window as unknown as { lenis?: Lenis }).lenis = lenis
+    lenisRef.current = lenis
 
     let snap: Snap | null = null
     const placeStations = () => {
@@ -55,14 +60,16 @@ function useSmoothScroll(enabled: boolean, snapToStations: boolean) {
       gsap.ticker.remove(tick)
       lenis.off('scroll', onScroll)
       lenis.destroy()
+      lenisRef.current = null
       delete (window as unknown as { lenis?: Lenis }).lenis
     }
   }, [enabled, snapToStations])
+  return lenisRef
 }
 
 export default function Demo(props: Partial<typeof settings>) {
   const s = { ...settings, ...props }
-  useSmoothScroll(s.smoothScroll, s.snapToStations)
+  const lenisRef = useSmoothScroll(s.smoothScroll, s.snapToStations)
   return (
     <div className="bg-background text-foreground">
       {/* the three rules lenis/dist/lenis.css would set; inlined so the demo stays one file */}
@@ -78,6 +85,10 @@ export default function Demo(props: Partial<typeof settings>) {
         travel={s.travel}
         feather={s.feather}
         grain={s.grain}
+        noiseScale={s.noiseScale}
+        inkColor={s.inkColor}
+        pointerDevelops={s.pointerDevelops}
+        scrollTo={(y) => (lenisRef.current ? lenisRef.current.scrollTo(y, { duration: 1.1 }) : window.scrollTo({ top: y, behavior: 'smooth' }))}
       />
       <section id="score" data-scene="after" className="mx-auto flex min-h-svh max-w-3xl flex-col justify-center px-6 py-24 md:px-10">
         <h2 data-motion="after-heading" className="font-serif text-3xl leading-tight md:text-4xl">
@@ -99,7 +110,11 @@ export default function Demo(props: Partial<typeof settings>) {
         </dl>
         <p className="mt-10 text-xs text-muted-foreground">
           One ScrollTrigger publishes one progress value; every effect is a window of it. The dissolve is an authored WebGL shader rendered only when the
-          scroll moves. Under prefers-reduced-motion this page is the finished print, static.
+          scroll moves, and a fine pointer develops the print where it rests. Under prefers-reduced-motion this page is the finished print, static.
+        </p>
+        <p className="mt-3 text-xs text-muted-foreground">
+          The ease control takes any atlas name (ink, lusion, osmo, ease-out, ease-in-out, drawer, expo.out, power4.out, power3.out, power2.out,
+          power2.inOut, expo.inOut, m3.standard), a cubic-bezier() string, or a GSAP ease name.
         </p>
       </section>
     </div>

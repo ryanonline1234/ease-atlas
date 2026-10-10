@@ -1,7 +1,7 @@
 {
   "schema": "awwwards-motion/samples@1",
   "url": "http://localhost:5178/?demo=ink-hero&dark=0",
-  "capturedAt": "2026-10-10T00:44:26.977Z",
+  "capturedAt": "2026-10-10T01:02:30.981Z",
   "viewport": {
     "width": 1440,
     "height": 900,
@@ -531,7 +531,7 @@
       "scrollY": 0,
       "nativeScrollY": 0,
       "settled": true,
-      "settleMs": 25.3,
+      "settleMs": 32.9,
       "measurements": {
         "hero": {
           "found": true,
@@ -790,7 +790,7 @@
       "scrollY": 72,
       "nativeScrollY": 72,
       "settled": true,
-      "settleMs": 28.1,
+      "settleMs": 29.1,
       "measurements": {
         "hero": {
           "found": true,
@@ -1049,7 +1049,7 @@
       "scrollY": 135,
       "nativeScrollY": 135,
       "settled": true,
-      "settleMs": 27.5,
+      "settleMs": 27.1,
       "measurements": {
         "hero": {
           "found": true,
@@ -1308,7 +1308,7 @@
       "scrollY": 216,
       "nativeScrollY": 216,
       "settled": true,
-      "settleMs": 30.3,
+      "settleMs": 29.6,
       "measurements": {
         "hero": {
           "found": true,
@@ -1567,7 +1567,7 @@
       "scrollY": 270,
       "nativeScrollY": 270,
       "settled": true,
-      "settleMs": 29.5,
+      "settleMs": 29.2,
       "measurements": {
         "hero": {
           "found": true,
@@ -1826,7 +1826,7 @@
       "scrollY": 304,
       "nativeScrollY": 304,
       "settled": true,
-      "settleMs": 28.9,
+      "settleMs": 30,
       "measurements": {
         "hero": {
           "found": true,
@@ -2085,7 +2085,7 @@
       "scrollY": 324,
       "nativeScrollY": 324,
       "settled": true,
-      "settleMs": 29.8,
+      "settleMs": 30.5,
       "measurements": {
         "hero": {
           "found": true,
@@ -2344,7 +2344,7 @@
       "scrollY": 338,
       "nativeScrollY": 338,
       "settled": true,
-      "settleMs": 30.2,
+      "settleMs": 30.4,
       "measurements": {
         "hero": {
           "found": true,
@@ -2603,7 +2603,7 @@
       "scrollY": 405,
       "nativeScrollY": 405,
       "settled": true,
-      "settleMs": 30.4,
+      "settleMs": 30.2,
       "measurements": {
         "hero": {
           "found": true,
@@ -2862,7 +2862,7 @@
       "scrollY": 473,
       "nativeScrollY": 473,
       "settled": true,
-      "settleMs": 30.4,
+      "settleMs": 30,
       "measurements": {
         "hero": {
           "found": true,
@@ -3380,7 +3380,7 @@
       "scrollY": 540,
       "nativeScrollY": 540,
       "settled": true,
-      "settleMs": 30.7,
+      "settleMs": 30.3,
       "measurements": {
         "hero": {
           "found": true,
@@ -3639,7 +3639,7 @@
       "scrollY": 675,
       "nativeScrollY": 675,
       "settled": true,
-      "settleMs": 30.7,
+      "settleMs": 29.8,
       "measurements": {
         "hero": {
           "found": true,
@@ -3898,7 +3898,7 @@
       "scrollY": 720,
       "nativeScrollY": 720,
       "settled": true,
-      "settleMs": 30.1,
+      "settleMs": 31.4,
       "measurements": {
         "hero": {
           "found": true,
@@ -4157,7 +4157,7 @@
       "scrollY": 810,
       "nativeScrollY": 810,
       "settled": true,
-      "settleMs": 30.9,
+      "settleMs": 30.1,
       "measurements": {
         "hero": {
           "found": true,
@@ -4416,7 +4416,7 @@
       "scrollY": 878,
       "nativeScrollY": 878,
       "settled": true,
-      "settleMs": 30,
+      "settleMs": 30.2,
       "measurements": {
         "hero": {
           "found": true,
@@ -4675,7 +4675,7 @@
       "scrollY": 900,
       "nativeScrollY": 900,
       "settled": true,
-      "settleMs": 30.4,
+      "settleMs": 30.1,
       "measurements": {
         "hero": {
           "found": true,
@@ -4934,7 +4934,7 @@
       "scrollY": 1013,
       "nativeScrollY": 1013,
       "settled": true,
-      "settleMs": 30.4,
+      "settleMs": 30.2,
       "measurements": {
         "hero": {
           "found": true,
@@ -5193,7 +5193,7 @@
       "scrollY": 1080,
       "nativeScrollY": 1080,
       "settled": true,
-      "settleMs": 30.2,
+      "settleMs": 30.3,
       "measurements": {
         "hero": {
           "found": true,
@@ -5452,7 +5452,7 @@
       "scrollY": 1188,
       "nativeScrollY": 1188,
       "settled": true,
-      "settleMs": 30.1,
+      "settleMs": 30.4,
       "measurements": {
         "hero": {
           "found": true,
@@ -5711,7 +5711,7 @@
       "scrollY": 1296,
       "nativeScrollY": 1296,
       "settled": true,
-      "settleMs": 30.6,
+      "settleMs": 29.7,
       "measurements": {
         "hero": {
           "found": true,
@@ -5970,7 +5970,7 @@
       "scrollY": 1350,
       "nativeScrollY": 1350,
       "settled": true,
-      "settleMs": 31.4,
+      "settleMs": 30.8,
       "measurements": {
         "hero": {
           "found": true,
@@ -6229,7 +6229,7 @@
       "scrollY": 1440,
       "nativeScrollY": 1440,
       "settled": true,
-      "settleMs": 29.3,
+      "settleMs": 30.5,
       "measurements": {
         "hero": {
           "found": true,
@@ -6488,7 +6488,7 @@
       "scrollY": 1512,
       "nativeScrollY": 1512,
       "settled": true,
-      "settleMs": 29.9,
+      "settleMs": 30.2,
       "measurements": {
         "hero": {
           "found": true,
@@ -6747,7 +6747,7 @@
       "scrollY": 1620,
       "nativeScrollY": 1620,
       "settled": true,
-      "settleMs": 29.7,
+      "settleMs": 30.5,
       "measurements": {
         "hero": {
           "found": true,
@@ -7006,7 +7006,7 @@
       "scrollY": 1728,
       "nativeScrollY": 1728,
       "settled": true,
-      "settleMs": 31.8,
+      "settleMs": 30.1,
       "measurements": {
         "hero": {
           "found": true,
@@ -7265,7 +7265,7 @@
       "scrollY": 1800,
       "nativeScrollY": 1800,
       "settled": true,
-      "settleMs": 29.8,
+      "settleMs": 30.8,
       "measurements": {
         "hero": {
           "found": true,
@@ -7524,7 +7524,7 @@
       "scrollY": 1890,
       "nativeScrollY": 1890,
       "settled": true,
-      "settleMs": 30.4,
+      "settleMs": 30.1,
       "measurements": {
         "hero": {
           "found": true,
@@ -7783,7 +7783,7 @@
       "scrollY": 1980,
       "nativeScrollY": 1980,
       "settled": true,
-      "settleMs": 30.2,
+      "settleMs": 30.7,
       "measurements": {
         "hero": {
           "found": true,
@@ -8042,7 +8042,7 @@
       "scrollY": 2160,
       "nativeScrollY": 2160,
       "settled": true,
-      "settleMs": 30.7,
+      "settleMs": 30.4,
       "measurements": {
         "hero": {
           "found": true,
@@ -8301,7 +8301,7 @@
       "scrollY": 2304,
       "nativeScrollY": 2304,
       "settled": true,
-      "settleMs": 30,
+      "settleMs": 30.4,
       "measurements": {
         "hero": {
           "found": true,
@@ -8560,7 +8560,7 @@
       "scrollY": 2430,
       "nativeScrollY": 2430,
       "settled": true,
-      "settleMs": 29.9,
+      "settleMs": 30.1,
       "measurements": {
         "hero": {
           "found": true,
@@ -8819,7 +8819,7 @@
       "scrollY": 2520,
       "nativeScrollY": 2520,
       "settled": true,
-      "settleMs": 30.8,
+      "settleMs": 30.2,
       "measurements": {
         "hero": {
           "found": true,
@@ -9078,7 +9078,7 @@
       "scrollY": 2565,
       "nativeScrollY": 2565,
       "settled": true,
-      "settleMs": 30.5,
+      "settleMs": 30.4,
       "measurements": {
         "hero": {
           "found": true,
@@ -9337,7 +9337,7 @@
       "scrollY": 2592,
       "nativeScrollY": 2592,
       "settled": true,
-      "settleMs": 30.4,
+      "settleMs": 30.5,
       "measurements": {
         "hero": {
           "found": true,
@@ -9596,7 +9596,7 @@
       "scrollY": 2664,
       "nativeScrollY": 2664,
       "settled": true,
-      "settleMs": 29.9,
+      "settleMs": 30.4,
       "measurements": {
         "hero": {
           "found": true,
@@ -9855,7 +9855,7 @@
       "scrollY": 2700,
       "nativeScrollY": 2700,
       "settled": true,
-      "settleMs": 29.8,
+      "settleMs": 30.2,
       "measurements": {
         "hero": {
           "found": true,
@@ -10114,7 +10114,7 @@
       "scrollY": 2880,
       "nativeScrollY": 2880,
       "settled": true,
-      "settleMs": 27.8,
+      "settleMs": 30.6,
       "measurements": {
         "hero": {
           "found": true,
@@ -10373,7 +10373,7 @@
       "scrollY": 3060,
       "nativeScrollY": 3060,
       "settled": true,
-      "settleMs": 30.8,
+      "settleMs": 30,
       "measurements": {
         "hero": {
           "found": true,
@@ -10632,7 +10632,7 @@
       "scrollY": 3240,
       "nativeScrollY": 3240,
       "settled": true,
-      "settleMs": 30.7,
+      "settleMs": 30.5,
       "measurements": {
         "hero": {
           "found": true,
@@ -10891,7 +10891,7 @@
       "scrollY": 3420,
       "nativeScrollY": 3420,
       "settled": true,
-      "settleMs": 30.7,
+      "settleMs": 30.5,
       "measurements": {
         "hero": {
           "found": true,
@@ -11150,7 +11150,7 @@
       "scrollY": 3600,
       "nativeScrollY": 3600,
       "settled": true,
-      "settleMs": 30.9,
+      "settleMs": 31.5,
       "measurements": {
         "hero": {
           "found": true,

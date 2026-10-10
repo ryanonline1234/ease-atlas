@@ -173,3 +173,17 @@ preset). Deployed from the CLI with `--prod --yes` under ryanonline1234's scope;
 not git-connected, so a change needs a manual redeploy. The per-deployment URL
 is SSO-protected; the alias is public. Rejected: wiring the GitHub repo to
 Vercel (every push would redeploy an unreviewed playground to a public URL).
+
+## 2026-10-09 — Ink, not fog: the front retuned, plus four add-ons
+Ryan: finer islands if it reads like fog. It did: large soft clouds. Now
+`noiseScale` 5 (was 3), `feather` 0.12 (was 0.18), a fine speckle term on the
+front so the edge breaks into droplets, a thinner and darker ink band, and a
+thin dark rim right at the front where ink pools as it dries. Stills at the
+wash station read as blots on a sheet. Add-ons from the review pass: a fine
+pointer develops the print locally where it rests (one render per move, no
+loop; off on coarse pointers and under reduced motion); the station rail is
+real buttons that scroll to each station (`scrollTo` prop so a Lenis page can
+route it); `inkColor` and `onStation` props; OG image, description and favicon
+on the playground so a shared link previews the print. Rejected: a
+velocity-coupled feather (a second interaction on one piece) and an in-shader
+blur (paint cost, and ink does not blur).
