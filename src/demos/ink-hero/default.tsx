@@ -25,7 +25,7 @@ function useSmoothScroll(enabled: boolean, snapToStations: boolean) {
   useEffect(() => {
     if (!enabled || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     gsap.registerPlugin(ScrollTrigger)
-    const lenis = new Lenis({ autoRaf: false, lerp: 0.1, smoothWheel: true, syncTouch: false })
+    const lenis = new Lenis({ autoRaf: false, lerp: 0.1, smoothWheel: true, syncTouch: false, anchors: true }) // anchors: the demo has #score links (scroll-architecture §1.2)
     const onScroll = () => ScrollTrigger.update()
     lenis.on('scroll', onScroll)
     const tick = (time: number) => lenis.raf(time * 1000)
