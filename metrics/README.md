@@ -12,3 +12,8 @@ that is not the owner's. Every inbound contact (message, mention, adoption by
 a named site) is logged in `inbound.md` with date and sender.
 
 Reporting rule: installs, copies, and bookmarks may be reported. Views may not.
+
+Capture with `node scripts/capture-metrics.mjs` (writes `metrics/<date>.json`).
+A fresh component page carries no `component_metrics` block; once counts exist, check
+the parser against the page and extend it. The creator Studio dashboard is the
+cross-check for views, copies, and installs over the last 30 days.

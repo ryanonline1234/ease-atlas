@@ -3,8 +3,14 @@
 Five web-motion primitives for React, built on measured easing constants rather
 than invented ones.
 
-**Status:** two components are built and verified, `InkHero` (the signature
-piece) and `EaseAtlas` (the instrument). Nothing is published yet.
+**Status:** two components are built, verified, and published to the 21st.dev
+registry (submitted for the catalog's Featured review on 2026-10-09):
+
+- InkHero — https://21st.dev/@ryanonline1234/components/ink-hero — `npx @21st-dev/cli add @ryanonline1234/ink-hero`
+- EaseAtlas — https://21st.dev/@ryanonline1234/components/ease-atlas — `npx @21st-dev/cli add @ryanonline1234/ease-atlas`
+
+Live playground: https://ease-atlas.vercel.app. This repository is canonical;
+the registry is a mirror.
 
 ## InkHero
 

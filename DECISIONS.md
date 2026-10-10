@@ -187,3 +187,18 @@ route it); `inkColor` and `onStation` props; OG image, description and favicon
 on the playground so a shared link previews the print. Rejected: a
 velocity-coupled feather (a second interaction on one piece) and an in-shader
 blur (paint cost, and ink does not blur).
+
+## 2026-10-09 — Published to 21st.dev, both components, covers supplied
+Ryan reviewed the live site and said publish both. Published from the CLI
+drafts: ink-hero (component 20923) and ease-atlas (component 20924), then
+`21st submit` for each → "in review". Until Featured, a published component is
+reachable by link and on the profile but not in the catalog; the listing shows
+as "unlisted" meanwhile. The registry's automatic cover capture refused the
+demo once over an off-origin playground link; covers were supplied from the
+harness stills instead (`.21st-review/*.jpg`, gitignored), which also give the
+card the print station rather than the paper station. Day-zero metrics
+captured (`metrics/2026-10-10.json`, UTC date): zeros everywhere, as expected;
+the per-component view counters are not in a fresh page's payload, so
+`scripts/capture-metrics.mjs` records what is present and the parser gets
+revisited at the first monthly capture. Gates now running: K2 (30 days after
+submit), K3 (60 days after the third Featured), K4 (90 days).

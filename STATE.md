@@ -4,52 +4,38 @@ _Updated: 2026-10-09_
 
 ## Now
 
-Two components built and verified, unpublished:
+**Published.** Both components are on 21st.dev and in the Featured review queue:
 
-- **InkHero** (`src/components/ui/ink-hero.tsx`, demo `src/demos/ink-hero/default.tsx`):
-  spec 72/76 measured checks, positive control fails as it should, 0 long frames at
-  120 Hz, flat-frame detector PASS, 0 shader errors, reduced-motion static. Stills in
-  `tests/ink-hero/out/` (gitignored captures regenerate from the commands in README).
-- **EaseAtlas** (`src/components/ui/ease-atlas.tsx`, demo `src/demos/ease-atlas/default.tsx`):
-  30 unit tests, probe measures all 24 rides against f(t).
+- InkHero — https://21st.dev/@ryanonline1234/components/ink-hero (component 20923, in review)
+- EaseAtlas — https://21st.dev/@ryanonline1234/components/ease-atlas (component 20924, in review)
 
-Playground: `npm run dev` → http://localhost:5178/?demo=ink-hero (or `ease-atlas`; `&dark=1`).
-**Live:** https://ease-atlas.vercel.app (`?demo=ink-hero` default, `?demo=ease-atlas`, `&dark=1`),
-Vercel project `ease-atlas` in ryanonline1234's scope, CLI-deployed (`vercel --prod --yes`), not
-git-connected: redeploy by hand after changes. No 21st.dev account yet; no npm.
+Live playground: https://ease-atlas.vercel.app (CLI-deployed, manual redeploys).
+Repo is canonical. Day-zero metrics: `metrics/2026-10-10.json`. Inbound log: `metrics/inbound.md`.
+Draft allowance: 18/20 remaining.
+
+Verification state unchanged since the last commit: spec 72/76, probe green (rail + pointer
+included), frame detector PASS, 43 unit tests, typecheck clean.
 
 ## Next
 
-1. **Ryan's taste review of the hero** (the human pass): scroll it at 1440 wide in light
-   and dark; judge the ride at 300vh travel, the station snap, the dissolve's noise scale
-   (`noiseScale`, `feather`, `grain` are live controls in the demo), the headline copy,
-   and whether the paper-station sheet reads. Anything changed goes back through
-   `npm test`, `npm run probe`, and the harness sample/assert.
-2. **Publish (Ryan is logged into the 21st CLI as ryanonline1234).** Drafts exist, unpublished:
-   - ink-hero `draft:a5ce537d-aeb6-4b89-a5d9-bf4eeb59fbdd`, Studio editor
-     https://21st.dev/studio/ryanonline1234/sandbox/mtvYp9zgb7uJHAbGeY7h5D?source=cli
-   - ease-atlas `draft:eb63f579-1722-4d6a-a86f-d93c58f4a74e`, Studio editor
-     https://21st.dev/studio/ryanonline1234/sandbox/v4Ts2DQHSPoc7iyztcLC3s?source=cli
-   Covers were supplied (`.21st-review/*.jpg`, gitignored) because their auto-capture failed on
-   the playground's `?demo=` link ("Capture request left its allowed origin"); that link is gone
-   from the registry demo. To publish after Ryan's review:
-   `21st publish ./src/components/ui/ink-hero.tsx --demo ./src/demos/ink-hero/default.tsx --draft draft:a5ce537d-aeb6-4b89-a5d9-bf4eeb59fbdd --auto --json`
-   then `21st submit ink-hero`; same for ease-atlas with its draft id; then start `metrics/`.
-   The original sequence, for reference:
-   `npm i -g @21st-dev/cli` → `21st login` → `21st search "scroll hero ink"` →
-   `21st render ./src/components/ui/ink-hero.tsx --demo ./src/demos/ink-hero/default.tsx --out ./preview --video`
-   → `21st publish ./src/components/ui/ink-hero.tsx --description "…" --tags hero,scroll,webgl,gsap,ink --prepare --wait-video --media-dir .21st-review`
-   → review both themes → `--draft draft:<uuid> --auto --wait-video` → `21st submit ink-hero`.
-   Then the same for `ease-atlas`. Start the monthly `metrics/` capture that day.
-3. **InkReveal** next: extract the dissolve as a standalone media reveal, then MaskReveal
-   and ScrollScore from the hero's parts.
+1. **Watch the Featured review.** `21st components --json` shows `reviewStatus`. "Needs
+   changes" → read the feedback, fix, `21st publish … --component component:<id>`, then
+   `21st submit <slug>` again. Gate K2: ≥3 of 5 Featured within 30 days of the last submit
+   (only two submitted so far; the extracted parts make up the five).
+2. **Monthly capture on the 1st:** `node scripts/capture-metrics.mjs` plus a Studio dashboard
+   screenshot into `metrics/`; log any contact in `metrics/inbound.md`. First capture
+   2026-11-01. Fix the view-counter parser then, against a page that has counts.
+3. **InkReveal next:** extract the dissolve as a standalone media reveal with a `progress`
+   prop (hover / scroll / controlled), then MaskReveal and ScrollScore from the hero.
+4. Rule still applies: a week without Terra's ten logged hours is a week ease-atlas pauses.
 
 ## Gotchas
 
-- Wikimedia serves only some thumbnail widths for this file: `1920px-` and `1280px-` exist,
-  `1600px-` returns 400. The demo uses 1920.
-- The harness's Chromium runs on SwiftShader; `jank` uses the real GPU. Both compile the
-  shader. If `[SHADER_ERROR] null` ever appears, suspect a lost context, not GLSL.
+- Registry auto-cover capture refuses demos that link off-origin (`?demo=` links). Keep the
+  registry demos self-contained; supply covers with `--preview` when in doubt.
+- Wikimedia serves `1920px-` and `1280px-` thumbs for the demo image; `1600px-` is a 400.
+- The harness's Chromium runs on SwiftShader; `jank` uses the real GPU. `[SHADER_ERROR] null`
+  means a lost context, not GLSL.
 - Tailwind with the Vite root at `playground/` needs `@source "../src";`.
-- The atlas probe divides by `getBoundingClientRect()` sizes, not `offsetHeight`, and counts
-  only `data-ride` animations.
+- The atlas probe divides by `getBoundingClientRect()` sizes and counts only `data-ride`
+  animations.
