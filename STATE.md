@@ -14,7 +14,9 @@ Two components built and verified, unpublished:
   30 unit tests, probe measures all 24 rides against f(t).
 
 Playground: `npm run dev` → http://localhost:5178/?demo=ink-hero (or `ease-atlas`; `&dark=1`).
-No 21st.dev account yet; no npm.
+**Live:** https://ease-atlas.vercel.app (`?demo=ink-hero` default, `?demo=ease-atlas`, `&dark=1`),
+Vercel project `ease-atlas` in ryanonline1234's scope, CLI-deployed (`vercel --prod --yes`), not
+git-connected: redeploy by hand after changes. No 21st.dev account yet; no npm.
 
 ## Next
 

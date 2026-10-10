@@ -5,3 +5,5 @@ preview/
 .env
 .DS_Store
 tests/__screens__/
+.vercel/
+.vercel

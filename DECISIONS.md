@@ -165,3 +165,11 @@ M1 Pro: median 8.3 ms, p95 9.2, p99 9.3, worst 42.6, 0 long frames, 0.48%
 dropped. analyze_frames: PASS. Probe: 0 shader errors, no context loss, no
 console errors, reduced-motion page static with no animations. Unverified:
 temporal feel, noise-scale aesthetics, mobile GPU thermals.
+
+## 2026-10-09 — Live playground on Vercel, CLI-deployed
+Ryan asked to see it. https://ease-atlas.vercel.app serves the built playground
+(`vercel.json`: build `npm run build`, output `playground/dist`, no framework
+preset). Deployed from the CLI with `--prod --yes` under ryanonline1234's scope;
+not git-connected, so a change needs a manual redeploy. The per-deployment URL
+is SSO-protected; the alias is public. Rejected: wiring the GitHub repo to
+Vercel (every push would redeploy an unreviewed playground to a public URL).
