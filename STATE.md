@@ -25,8 +25,17 @@ git-connected: redeploy by hand after changes. No 21st.dev account yet; no npm.
    (`noiseScale`, `feather`, `grain` are live controls in the demo), the headline copy,
    and whether the paper-station sheet reads. Anything changed goes back through
    `npm test`, `npm run probe`, and the harness sample/assert.
-2. **Publish (Ryan is logged into the 21st CLI as ryanonline1234):** drafts are opened with
-   `--prepare --no-open`; Ryan reviews the CLI Review link, then:
+2. **Publish (Ryan is logged into the 21st CLI as ryanonline1234).** Drafts exist, unpublished:
+   - ink-hero `draft:a5ce537d-aeb6-4b89-a5d9-bf4eeb59fbdd`, Studio editor
+     https://21st.dev/studio/ryanonline1234/sandbox/mtvYp9zgb7uJHAbGeY7h5D?source=cli
+   - ease-atlas `draft:eb63f579-1722-4d6a-a86f-d93c58f4a74e`, Studio editor
+     https://21st.dev/studio/ryanonline1234/sandbox/v4Ts2DQHSPoc7iyztcLC3s?source=cli
+   Covers were supplied (`.21st-review/*.jpg`, gitignored) because their auto-capture failed on
+   the playground's `?demo=` link ("Capture request left its allowed origin"); that link is gone
+   from the registry demo. To publish after Ryan's review:
+   `21st publish ./src/components/ui/ink-hero.tsx --demo ./src/demos/ink-hero/default.tsx --draft draft:a5ce537d-aeb6-4b89-a5d9-bf4eeb59fbdd --auto --json`
+   then `21st submit ink-hero`; same for ease-atlas with its draft id; then start `metrics/`.
+   The original sequence, for reference:
    `npm i -g @21st-dev/cli` → `21st login` → `21st search "scroll hero ink"` →
    `21st render ./src/components/ui/ink-hero.tsx --demo ./src/demos/ink-hero/default.tsx --out ./preview --video`
    → `21st publish ./src/components/ui/ink-hero.tsx --description "…" --tags hero,scroll,webgl,gsap,ink --prepare --wait-video --media-dir .21st-review`

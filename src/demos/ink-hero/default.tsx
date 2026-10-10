@@ -80,7 +80,7 @@ export default function Demo(props: Partial<typeof settings>) {
         headline={s.headline}
         caption={s.caption}
         cta={{ label: s.ctaLabel, href: '#score' }}
-        nav={{ brand: 'ease-atlas', links: [{ label: 'Atlas', href: '?demo=ease-atlas' }, { label: 'Score', href: '#score' }] }}
+        nav={{ brand: 'ease-atlas', links: [{ label: 'Score', href: '#score' }] }}
         ease={s.ease}
         travel={s.travel}
         feather={s.feather}
