@@ -94,3 +94,74 @@ off-grid times, reads the marker's computed transform and compares it with the
 parsed function; it includes a positive control that fails when a curve is
 compared with the wrong function, a reduced-motion check, a page-error check,
 and light/dark captures for the taste review. Screenshots are for judgment only.
+
+## 2026-10-09 — The headline piece is a signature scroll hero, not four quiet primitives
+Ryan: "Instead of focusing on something so practical could we make something that
+seems impressive." The platform data agrees: the most-bookmarked components are
+scroll-driven hero sequences and single striking effects (scroll-expansion-hero
+10.3k bookmarks, container-scroll-animation 9.9k, scroll-locked-video-hero 2.8k in
+its first seven weeks), while the hero lane is also the most crowded (~400), so the
+piece needs one specific idea. Chosen: an ink-wash hero scored in three stations —
+the image develops from wash to print as you scroll, the headline bleeds in line by
+line, the nav settles — fusing the sumi-e and scroll-journey families with the
+measured curves. The demo's controls retime it live with any atlas curve. Its parts
+(ink media reveal, text reveal, scroll score) ship afterwards as their own
+components. EaseAtlas stays published as the instrument. Rejected: a lone WebGL
+micro-effect (commodity lane); the ease theater alone (nice, not impressive).
+
+## 2026-10-09 — K1 revised: no wall-clock cap
+Ryan: "Don't worry about clock hours." K1 becomes a readiness gate: the hero does not
+publish until the scroll spec's assertions pass in measurement, the reduced-motion
+path renders a complete static page, both themes pass review, and gate K0 clears
+every block. K2–K6 unchanged; the set is EaseAtlas, the hero, and its extracted parts.
+
+## 2026-10-09 — Shader provenance rule, made explicit
+The ink dissolve shader is authored from first principles (an integer hash, value
+noise, fbm, a feathered threshold). No GLSL is copied from memory or from any site.
+If an MIT-licensed block is ever adapted, its license header stays in the file and
+the credit appears on the component page, which is what K0 and the registry Terms
+both require; the K0 "verbatim" ban targets code reconstructed from other sites'
+bundles, not licensed open source with its license intact.
+
+## 2026-10-09 — Ink Hero: three stations, one trigger, one surface
+Paper (h=0) → wash (h=0.5) → print (h=1), each leg on the chosen curve (default
+`ink`), text reveals on `expo.out`. A static 400vh section with a sticky stage,
+one ScrollTrigger publishing h, every effect a window of h through quick
+setters, one WebGL2 canvas rendered only from scroll updates. Rejected: a
+ScrollTrigger pin (spacer + ordering constraints the sticky stage avoids);
+SplitText for the headline (the lines are authored, so hand-rolled masks keep
+the text intact for assistive tech and copy; SplitText stays for wrapped
+paragraphs); CSS `clip-path` for the frame (the shader draws the frame edge for
+free and can brush it); a free rAF loop for the canvas.
+
+## 2026-10-09 — Dispose never forces WebGL context loss
+The first build called `WEBGL_lose_context.loseContext()` on unmount. React
+StrictMode mounts twice, so the second mount inherited a dead context: the
+harness reported `[SHADER_ERROR] null` and a hidden canvas while the shader
+compiled fine in isolation. Dispose now releases GPU objects only; init asks
+for a restore if it meets a lost context and re-initializes on
+`webglcontextrestored`. Lesson: a lifecycle bug reads exactly like a shader bug
+until you compile the shader by itself.
+
+## 2026-10-09 — Spec-authoring lessons from the first measured run
+The hero scene's local progress equals h, so a key's `localProgress` is h, not
+the page fraction (the first draft put the line-1 "revealed" key at h=0.6 and
+the ease probe failed at 0.994). Measure sections, not vertically centered
+children. Both were spec mistakes, not build defects; the harness made that
+distinction cheap.
+
+## 2026-10-09 — Two defects found in the stills, fixed in the shader
+At the paper station nothing was developed, so the "small sheet on bare
+paper" composition never appeared; the sheet now shows faintly (7% alpha,
+fading as the image develops). At full bleed the brushed frame edge left a
+ragged border at the viewport edges; the brush now scales with the inset and the
+frame is exactly 1 at inset 0. Numbers first, looks second: both were invisible
+to the spec and obvious in the contact sheet.
+
+## 2026-10-09 — Verification record
+Spec: 72/76 (2 warnings, 2 invariants the capture format cannot record).
+Positive control: dead develop track → 5 failures. Jank at 120 Hz on Apple
+M1 Pro: median 8.3 ms, p95 9.2, p99 9.3, worst 42.6, 0 long frames, 0.48%
+dropped. analyze_frames: PASS. Probe: 0 shader errors, no context loss, no
+console errors, reduced-motion page static with no animations. Unverified:
+temporal feel, noise-scale aesthetics, mobile GPU thermals.

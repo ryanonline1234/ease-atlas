@@ -54,7 +54,7 @@ beforeAll(async () => {
   page.on('console', (m) => {
     if (m.type() === 'error') pageErrors.push(m.text())
   })
-  await page.goto(`http://localhost:${PORT}/?dark=0`)
+  await page.goto(`http://localhost:${PORT}/?demo=ease-atlas&dark=0`)
   await page.getByRole('button', { name: 'Copy expo.out as CSS' }).waitFor()
 })
 
@@ -100,7 +100,7 @@ describe('the marker rides the function it is drawn from', () => {
 describe('reduced motion', () => {
   it('creates no animations and parks the marker at the end of the curve', async () => {
     const p2 = await browser.newPage({ viewport: { width: 1280, height: 900 }, reducedMotion: 'reduce' })
-    await p2.goto(`http://localhost:${PORT}/?dark=0`)
+    await p2.goto(`http://localhost:${PORT}/?demo=ease-atlas&dark=0`)
     await p2.getByRole('button', { name: 'Copy expo.out as CSS' }).waitFor()
     await p2.getByRole('button', { name: 'Copy expo.out as CSS' }).hover()
     const r = await p2.evaluate(() => {
@@ -126,7 +126,7 @@ describe('screens for the taste review', () => {
     fs.mkdirSync('tests/__screens__', { recursive: true })
     for (const theme of ['light', 'dark'] as const) {
       const p = await browser.newPage({ viewport: { width: 1280, height: 1000 } })
-      await p.goto(`http://localhost:${PORT}/?dark=${theme === 'dark' ? 1 : 0}`)
+      await p.goto(`http://localhost:${PORT}/?demo=ease-atlas&dark=${theme === 'dark' ? 1 : 0}`)
       await p.getByRole('button', { name: 'Copy expo.out as CSS' }).waitFor()
       await p.waitForTimeout(900)
       await p.screenshot({ path: `tests/__screens__/${theme}.png`, fullPage: true })

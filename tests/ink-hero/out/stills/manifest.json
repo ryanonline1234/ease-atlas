@@ -1,0 +1,55 @@
+{
+  "schema": "awwwards-motion/stills@1",
+  "url": "http://localhost:5178/?demo=ink-hero&dark=0",
+  "mode": "scroll",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "dpr": 1
+  },
+  "reducedMotion": "no-preference",
+  "diagnostics": {
+    "pageErrors": [],
+    "consoleErrors": [],
+    "consoleWarningCount": 0,
+    "failedRequests": []
+  },
+  "frames": [
+    {
+      "index": 0,
+      "progress": 0,
+      "file": "tests/ink-hero/out/stills/000_p0.000_y000000.png",
+      "label": "y000000"
+    },
+    {
+      "index": 1,
+      "progress": 0.1875,
+      "file": "tests/ink-hero/out/stills/001_p0.188_y000675.png",
+      "label": "y000675"
+    },
+    {
+      "index": 2,
+      "progress": 0.375,
+      "file": "tests/ink-hero/out/stills/002_p0.375_y001350.png",
+      "label": "y001350"
+    },
+    {
+      "index": 3,
+      "progress": 0.5625,
+      "file": "tests/ink-hero/out/stills/003_p0.563_y002025.png",
+      "label": "y002025"
+    },
+    {
+      "index": 4,
+      "progress": 0.75,
+      "file": "tests/ink-hero/out/stills/004_p0.750_y002700.png",
+      "label": "y002700"
+    },
+    {
+      "index": 5,
+      "progress": 1,
+      "file": "tests/ink-hero/out/stills/005_p1.000_y003600.png",
+      "label": "y003600"
+    }
+  ]
+}

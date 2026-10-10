@@ -1,0 +1,504 @@
+{
+  "$schema": "../../../.claude/skills/awwwards-motion/scripts/scroll-spec.schema.json",
+  "specVersion": 1,
+  "name": "ink-hero-desktop",
+  "description": "A sticky hero scored in three stations: paper (h=0), wash (h=0.5), print (h=1). One ScrollTrigger publishes the hero progress h; the image develops from wash to print under the ink curve, the frame grows to full bleed, the headline bleeds in line by line, the scrim and nav settle in the second leg. Written BEFORE the component existed. Page: hero section 400vh + after section 100vh at 1440x900 -> 4500px document, 3600px of scroll; the hero owns global progress 0..0.75 (h = P * 4/3).",
+  "url": "http://localhost:5178/?demo=ink-hero&dark=0",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "dpr": 1,
+    "colorScheme": "light",
+    "reducedMotion": "no-preference"
+  },
+  "scroll": {
+    "totalHeightPx": 4500,
+    "totalHeightTolerancePx": 24,
+    "scrollAccuracyTolerancePx": 4,
+    "sampleMatchWindow": 0.01,
+    "allowSceneOverlap": false,
+    "coverage": {
+      "require": "full",
+      "maxGapProgress": 0.005
+    }
+  },
+  "settleMinMs": 0,
+  "settleMaxMs": 2500,
+  "positions": [
+    0,
+    0.02,
+    0.0375,
+    0.06,
+    0.075,
+    0.0844,
+    0.09,
+    0.09375,
+    0.1125,
+    0.13125,
+    0.140625,
+    0.15,
+    0.1875,
+    0.2,
+    0.225,
+    0.24375,
+    0.25,
+    0.28125,
+    0.3,
+    0.33,
+    0.36,
+    0.375,
+    0.4,
+    0.42,
+    0.45,
+    0.48,
+    0.5,
+    0.525,
+    0.55,
+    0.6,
+    0.64,
+    0.675,
+    0.7,
+    0.7125,
+    0.72,
+    0.74,
+    0.75,
+    0.8,
+    0.85,
+    0.9,
+    0.95,
+    1
+  ],
+  "targets": {
+    "hero": {
+      "selector": "[data-ink-hero]",
+      "vars": [
+        "--ink-progress",
+        "--ink-develop",
+        "--ink-inset",
+        "--ink-wash",
+        "--ink-station",
+        "--ink-line-1",
+        "--ink-line-2",
+        "--ink-scrim",
+        "--ink-nav"
+      ]
+    },
+    "stage": "[data-motion='ink-stage']",
+    "canvas": "[data-motion='ink-canvas']",
+    "headline": "[data-motion='ink-headline']",
+    "scrim": "[data-motion='ink-scrim']",
+    "nav": "[data-motion='ink-nav']",
+    "after": "[data-scene='after']"
+  },
+  "globalExpectations": [
+    {
+      "id": "hero-progress-var",
+      "target": "hero",
+      "property": "cssVar",
+      "cssVarName": "--ink-progress",
+      "tolerance": 0.02,
+      "monotonic": "increasing",
+      "monotonicRange": {
+        "from": 0.0,
+        "to": 0.75
+      },
+      "keys": [
+        {
+          "progress": 0.0,
+          "value": 0,
+          "label": "paper"
+        },
+        {
+          "progress": 0.375,
+          "value": 0.5,
+          "label": "wash"
+        },
+        {
+          "progress": 0.75,
+          "value": 1,
+          "label": "print"
+        }
+      ],
+      "easeRef": "linear by construction: the raw sticky-stage progress, h = scrollY / 2700",
+      "note": "The ONE value every track reads. If this line fails, every scene failure below is a symptom."
+    }
+  ],
+  "scenes": [
+    {
+      "id": "ink-hero",
+      "label": "Ink hero \u2014 paper, wash, print",
+      "selector": "[data-ink-hero]",
+      "range": {
+        "from": 0.0,
+        "to": 0.75
+      },
+      "expectations": [
+        {
+          "id": "stage-stays-stuck",
+          "target": "stage",
+          "property": "rect.top",
+          "tolerance": 2,
+          "mustChange": false,
+          "keys": [
+            {
+              "localProgress": 0.05,
+              "value": 0,
+              "label": "just stuck"
+            },
+            {
+              "localProgress": 0.5,
+              "value": 0,
+              "label": "wash station"
+            },
+            {
+              "localProgress": 0.95,
+              "value": 0,
+              "label": "about to release"
+            }
+          ],
+          "note": "CSS sticky stage inside a 400vh section: no pin spacer, no transformed ancestor. Constancy is the assertion."
+        },
+        {
+          "id": "canvas-fills-stage",
+          "target": "canvas",
+          "property": "rect.height",
+          "tolerance": 2,
+          "mustChange": false,
+          "keys": [
+            {
+              "localProgress": 0.5,
+              "value": 900,
+              "label": "full-bleed canvas"
+            }
+          ]
+        },
+        {
+          "id": "develop",
+          "target": "hero",
+          "property": "cssVar",
+          "cssVarName": "--ink-develop",
+          "tolerance": 0.03,
+          "monotonic": "increasing",
+          "keys": [
+            {
+              "localProgress": 0.0,
+              "value": 0,
+              "tolerance": 0.01,
+              "label": "paper: nothing developed"
+            },
+            {
+              "localProgress": 0.5,
+              "value": 0.42,
+              "label": "wash: half developed"
+            },
+            {
+              "localProgress": 1.0,
+              "value": 1,
+              "tolerance": 0.01,
+              "label": "print: fully developed"
+            }
+          ],
+          "easeShape": {
+            "ref": "ink cubic-bezier(0.7, 0, 0.2, 1) over the leg window h 0.04-0.48",
+            "fromKey": 0,
+            "toKey": 1,
+            "probes": [
+              {
+                "at": 0.25,
+                "minFraction": 0.0,
+                "maxFraction": 0.16
+              },
+              {
+                "at": 0.5,
+                "minFraction": 0.38,
+                "maxFraction": 0.72
+              },
+              {
+                "at": 0.75,
+                "minFraction": 0.86,
+                "maxFraction": 1.01
+              }
+            ]
+          },
+          "easeRef": "ink = cubic-bezier(0.7, 0, 0.2, 1): 0.066 at t=0.25, 0.636 at t=0.5, 0.954 at t=0.75 (observed on oneshot-sakura.vercel.app; motion-priors \u00a73.2). Probes account for the leg window starting at h=0.04.",
+          "note": "A linear scrub reads 0.25 at the first probe and fails it. The develop value is the shader's uProgress, published as a CSS var so the harness can read what the GPU was told."
+        },
+        {
+          "id": "frame-inset",
+          "target": "hero",
+          "property": "cssVar",
+          "cssVarName": "--ink-inset",
+          "tolerance": 0.012,
+          "monotonic": "decreasing",
+          "keys": [
+            {
+              "localProgress": 0.0,
+              "value": 0.22,
+              "label": "small centered frame"
+            },
+            {
+              "localProgress": 0.5,
+              "value": 0.1,
+              "label": "wash: larger frame"
+            },
+            {
+              "localProgress": 1.0,
+              "value": 0,
+              "tolerance": 0.005,
+              "label": "print: full bleed"
+            }
+          ],
+          "easeRef": "ink, per leg"
+        },
+        {
+          "id": "wash-to-print",
+          "target": "hero",
+          "property": "cssVar",
+          "cssVarName": "--ink-wash",
+          "tolerance": 0.03,
+          "monotonic": "decreasing",
+          "keys": [
+            {
+              "localProgress": 0.0,
+              "value": 1,
+              "label": "faint wash"
+            },
+            {
+              "localProgress": 0.5,
+              "value": 0.55,
+              "label": "half print"
+            },
+            {
+              "localProgress": 1.0,
+              "value": 0,
+              "tolerance": 0.01,
+              "label": "print"
+            }
+          ],
+          "easeRef": "ink, per leg"
+        },
+        {
+          "id": "station-index",
+          "target": "hero",
+          "property": "cssVar",
+          "cssVarName": "--ink-station",
+          "tolerance": 0.01,
+          "monotonic": "increasing",
+          "keys": [
+            {
+              "localProgress": 0.1,
+              "value": 0,
+              "label": "paper"
+            },
+            {
+              "localProgress": 0.5,
+              "value": 1,
+              "label": "wash"
+            },
+            {
+              "localProgress": 0.9,
+              "value": 2,
+              "label": "print"
+            }
+          ],
+          "note": "Discrete: 0 below h=0.25, 1 below h=0.75, else 2. Drives the station rail; the cheapest proof the sequence is advancing rather than sliding."
+        },
+        {
+          "id": "headline-line-1",
+          "target": "hero",
+          "property": "cssVar",
+          "cssVarName": "--ink-line-1",
+          "tolerance": 0.03,
+          "monotonic": "increasing",
+          "monotonicRange": {
+            "from": 0.0,
+            "to": 0.3
+          },
+          "keys": [
+            {
+              "localProgress": 0.05,
+              "value": 0,
+              "tolerance": 0.02,
+              "label": "masked"
+            },
+            {
+              "localProgress": 0.3,
+              "value": 1,
+              "tolerance": 0.01,
+              "label": "revealed"
+            }
+          ],
+          "easeShape": {
+            "ref": "expo.out over the window h 0.06-0.26",
+            "fromKey": 0,
+            "toKey": 1,
+            "probes": [
+              {
+                "at": 0.25,
+                "minFraction": 0.68,
+                "maxFraction": 0.95
+              },
+              {
+                "at": 0.5,
+                "minFraction": 0.9,
+                "maxFraction": 1.01
+              }
+            ]
+          },
+          "easeRef": "expo.out (GSAP blended form) over the window h 0.06-0.26; the hero scene's local progress IS h, so the segment h 0.05-0.30 puts the quarter probe at h=0.1125 (t=0.26, expo.out 0.84) and the half probe at h=0.175 (t=0.575, 0.98).",
+          "note": "The reveal fraction is what drives the line's yPercent (100 -> 0). A linear scrub reads ~0.26 at the first probe and fails."
+        },
+        {
+          "id": "headline-line-2",
+          "target": "hero",
+          "property": "cssVar",
+          "cssVarName": "--ink-line-2",
+          "tolerance": 0.03,
+          "monotonic": "increasing",
+          "monotonicRange": {
+            "from": 0.0,
+            "to": 0.3
+          },
+          "keys": [
+            {
+              "localProgress": 0.12,
+              "value": 0,
+              "tolerance": 0.02,
+              "label": "masked, after line 1 started"
+            },
+            {
+              "localProgress": 0.4,
+              "value": 1,
+              "tolerance": 0.01,
+              "label": "revealed"
+            }
+          ],
+          "easeRef": "expo.out, window h 0.14-0.34: an 0.08 stagger behind line 1"
+        },
+        {
+          "id": "scrim-settles",
+          "target": "scrim",
+          "property": "opacity",
+          "tolerance": 0.03,
+          "monotonic": "increasing",
+          "monotonicRange": {
+            "from": 0.375,
+            "to": 0.75
+          },
+          "keys": [
+            {
+              "localProgress": 0.5,
+              "value": 0,
+              "tolerance": 0.01,
+              "label": "no scrim at the wash station"
+            },
+            {
+              "localProgress": 1.0,
+              "value": 1,
+              "tolerance": 0.01,
+              "label": "scrim under the headline at print"
+            }
+          ],
+          "easeRef": "ink, window h 0.60-0.90"
+        },
+        {
+          "id": "nav-settles",
+          "target": "hero",
+          "property": "cssVar",
+          "cssVarName": "--ink-nav",
+          "tolerance": 0.03,
+          "monotonic": "increasing",
+          "monotonicRange": {
+            "from": 0.375,
+            "to": 0.75
+          },
+          "keys": [
+            {
+              "localProgress": 0.5,
+              "value": 0,
+              "tolerance": 0.01,
+              "label": "transparent nav"
+            },
+            {
+              "localProgress": 1.0,
+              "value": 1,
+              "tolerance": 0.01,
+              "label": "settled nav"
+            }
+          ],
+          "easeRef": "ink, window h 0.55-0.85"
+        },
+        {
+          "id": "headline-really-visible",
+          "target": "headline",
+          "property": "effectiveOpacity",
+          "tolerance": 0.03,
+          "mustChange": false,
+          "keys": [
+            {
+              "localProgress": 1.0,
+              "value": 1,
+              "label": "headline painted over the print"
+            }
+          ],
+          "note": "Own-opacity 1 under an ancestor at 0 is the classic dead reveal; one key catches it."
+        }
+      ]
+    },
+    {
+      "id": "after",
+      "label": "After \u2014 the hero releases and the page continues",
+      "selector": "[data-scene='after']",
+      "range": {
+        "from": 0.75,
+        "to": 1.0
+      },
+      "expectations": [
+        {
+          "id": "after-section-rises",
+          "target": "after",
+          "property": "rect.top",
+          "tolerance": 12,
+          "monotonic": "decreasing",
+          "keys": [
+            {
+              "localProgress": 0.0,
+              "value": 900,
+              "label": "entering at the viewport bottom as the hero releases"
+            },
+            {
+              "localProgress": 1.0,
+              "value": 0,
+              "label": "at the top at the end of the page"
+            }
+          ],
+          "easeRef": "none: native scroll of an unpinned section",
+          "note": "Proves the sticky section released and the document really is 4500px: the after section's top travels exactly one viewport across the last quarter of scroll. (Measured the section, not its vertically centered heading.)"
+        }
+      ]
+    }
+  ],
+  "invariants": {
+    "noHorizontalOverflow": {
+      "enabled": true,
+      "tolerancePx": 1
+    },
+    "pinsMustNotOverlap": true,
+    "documentHeightStable": {
+      "enabled": true,
+      "tolerancePx": 2
+    },
+    "visibleWithin": [
+      {
+        "id": "stage-on-screen-through-hero",
+        "selector": "[data-motion='ink-stage']",
+        "range": {
+          "from": 0.0,
+          "to": 0.75
+        },
+        "minVisiblePx": 800
+      }
+    ],
+    "neverVisible": []
+  }
+}

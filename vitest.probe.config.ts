@@ -7,6 +7,7 @@ export default defineConfig({
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   test: {
     include: ['tests/**/*.probe.ts'],
+    sequence: { concurrent: false },
     testTimeout: 120_000,
     hookTimeout: 120_000,
     fileParallelism: false,

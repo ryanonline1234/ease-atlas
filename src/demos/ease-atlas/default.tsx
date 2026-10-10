@@ -11,8 +11,10 @@ const settings = {
 export default function Demo(props: Partial<typeof settings>) {
   const s = { ...settings, ...props }
   return (
-    <div className="w-full max-w-5xl bg-background p-6 text-foreground">
-      <EaseAtlas columns={s.columns} duration={s.duration} autoplay={s.autoplay} showGhost={s.showGhost} showCode={s.showCode} />
+    <div className="min-h-screen w-full bg-background p-6 text-foreground md:p-10">
+      <div className="mx-auto max-w-5xl">
+        <EaseAtlas columns={s.columns} duration={s.duration} autoplay={s.autoplay} showGhost={s.showGhost} showCode={s.showCode} />
+      </div>
     </div>
   )
 }

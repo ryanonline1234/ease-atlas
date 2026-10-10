@@ -3,8 +3,57 @@
 Five web-motion primitives for React, built on measured easing constants rather
 than invented ones.
 
-**Status:** the anchor component, `EaseAtlas`, is built and verified. Nothing is
-published yet. The other four are planned (see below).
+**Status:** two components are built and verified, `InkHero` (the signature
+piece) and `EaseAtlas` (the instrument). Nothing is published yet.
+
+## InkHero
+
+A sticky hero scored in three stations. As you scroll, an image develops from
+a faint ink wash to a full print, the frame grows from a small sheet to full
+bleed, the headline bleeds in line by line, and the nav settles. Every leg of
+the score runs on a named curve (default: `ink`, observed on
+oneshot-sakura.vercel.app), and the demo's controls retime it live with any
+curve from the atlas.
+
+- **Paper** (h = 0): bare paper, a faint sheet where the print will be, the
+  eyebrow and headline bleed in on `expo.out`.
+- **Wash** (h = 0.5): the image is half developed and desaturated, the sheet has
+  grown, the marker on the station rail moves.
+- **Print** (h = 1): full bleed, full contrast, the scrim and nav settle, the
+  caption and call to action arrive last.
+
+How it is built, per the scroll-architecture rules this project follows: a
+static 400vh section with a `position: sticky` stage (no pin spacer), **one**
+ScrollTrigger that publishes one progress value, every effect a window of that
+value written through quick setters, and one WebGL2 surface that renders only
+when the scroll moves. The dissolve shader is authored from first principles
+(an integer hash, value noise, five-octave fbm, a feathered threshold with an
+ink-tinted band, a hand-brushed frame edge, static paper grain). Under
+`prefers-reduced-motion: reduce` the component renders the finished print as a
+static, complete page with no scroll travel; without WebGL2 an `<img>` with a
+clip-path frame takes over. The demo wires Lenis on the window through the GSAP
+ticker and snaps to the two stations with `lenis/snap`; the component itself
+never owns scroll.
+
+Single file: [`src/components/ui/ink-hero.tsx`](src/components/ui/ink-hero.tsx)
+(React, GSAP ScrollTrigger). Demo with the controls contract:
+[`src/demos/ink-hero/default.tsx`](src/demos/ink-hero/default.tsx), using a
+public-domain landscape attributed to Sesshū Tōyō (Honolulu Museum of Art).
+
+| Prop | Default | What it does |
+|---|---|---|
+| `image` | — | `{ src, alt }`; cross-origin images need CORS for the texture |
+| `headline` | — | A string with newlines or an array of lines; each line gets its own mask |
+| `eyebrow`, `caption`, `cta`, `nav` | — | The small type around the headline |
+| `ease` | `'ink'` | A `NAMED_CURVES` key, a `cubic-bezier()` string, or a GSAP ease name |
+| `travel` | `300` | Scroll travel in vh beyond the first screen |
+| `feather` | `0.18` | Dissolve edge softness |
+| `grain` | `0.35` | Paper grain |
+| `noiseScale` | `3` | Finer or coarser islands in the dissolve |
+| `dprCap` | `1.5` | Canvas device-pixel-ratio cap |
+
+The score itself is data (`WINDOWS` in the component): a pair of h values per
+effect. Retiming is editing two numbers.
 
 ## EaseAtlas
 
@@ -53,38 +102,61 @@ targets.
 ## Verification
 
 ```bash
-npm test            # 30 unit tests: parser, sampler, atlas integrity, copy text, component behaviour
+npm test            # 43 unit tests: parsers, samplers, the score's track table, atlas integrity, copy text, component behaviour
 npm run typecheck
-npm run probe       # Chromium: pauses each cell's real animation, seeks it, and compares the marker's position with f(t)
-npm run dev         # playground at http://localhost:5178 (?dark=1 for dark)
+npm run probe       # Chromium: the atlas ride measured against f(t); the hero's shader/context/console checks, reduced-motion page, theme captures
+npm run dev         # playground at http://localhost:5178 (?demo=ink-hero or ?demo=ease-atlas, &dark=1 for dark)
 ```
 
-The probe is the claim's proof: for all 24 curves it reads the marker's actual
-transform at nine on-grid and five off-grid times and requires agreement with
-the parsed function to 0.05% on-grid and 1% between stops, checks the
-reduced-motion path, captures light and dark screens, and includes a positive
-control that must fail when a curve is compared with the wrong function.
-Sampling density is adaptive: 64 stops unless the polyline misses the function
-by more than 0.5% between stops, in which case it doubles (bounce and elastic
-need more). The glyph and the ride always share the same stops.
+The hero is measured, not eyeballed, with the awwwards-motion harness. The scroll
+spec was written before the component existed
+([`tests/ink-hero/scroll-spec.json`](tests/ink-hero/scroll-spec.json)):
+stations, windows, ease-shape probes, pin behaviour, and the after section's
+release. The capture pauses the page at 42 scroll positions and reads the CSS
+variables the component publishes (`--ink-progress`, `--ink-develop`,
+`--ink-inset`, `--ink-wash`, `--ink-station`, `--ink-line-1/2`, `--ink-nav`),
+the scrim's opacity, the stage's position, and the headline's effective
+opacity.
 
-## The planned set
+```bash
+S=~/.claude/skills/awwwards-motion/scripts
+node $S/capture_motion.mjs sample "http://localhost:5178/?demo=ink-hero&dark=0" --spec tests/ink-hero/scroll-spec.json --out tests/ink-hero/out/samples.json --viewport 1440x900 --dpr 1 --color-scheme light --wait-for-fonts
+node $S/assert_scroll_spec.mjs tests/ink-hero/scroll-spec.json tests/ink-hero/out/samples.json
+node $S/capture_motion.mjs stills "http://localhost:5178/?demo=ink-hero&dark=0" --positions 0,0.1875,0.375,0.5625,0.75,1 --out tests/ink-hero/out/stills --viewport 1440x900
+node $S/capture_motion.mjs jank "http://localhost:5178/?demo=ink-hero&dark=0" --viewport 1440x900
+python3 $S/analyze_frames.py tests/ink-hero/out/stills --montage tests/ink-hero/out/sheet.png
+```
 
-One stack for all five: React 19, TypeScript, Tailwind v4 semantic tokens;
-GSAP + `@gsap/react` from the second component on. One easing vocabulary. One
+Results on 2026-10-09: 72 of 76 checks pass (the other four are two warnings
+and two invariants the capture format cannot record); the positive control,
+a deliberately dead develop track, fails five checks including the
+"value never changed" catch; frame timing at 120 Hz on an Apple M1 Pro has a
+median of 8.3 ms, p99 9.3 ms, zero long frames; the flat-frame detector passes;
+the shader compiles with no errors, the context is never lost, the console stays
+clean, and the reduced-motion page has no animations and no scroll travel.
+
+What measurement cannot tell you, stated plainly: whether the ride *feels*
+right at 300vh, whether the dissolve's noise scale reads as ink rather than
+fog, and how a mid-range phone GPU holds up. Those are the human pass.
+
+The atlas has its own probe: for all 24 curves it seeks the real animation
+and requires the marker to agree with the parsed function to 0.05% on-grid and
+1% between stops, with a positive control, a reduced-motion check, and
+light/dark captures. Sampling density is adaptive (64 stops unless the
+polyline misses the function by more than 0.5%), and the glyph and the ride
+always share the same stops.
+
+## The set
+
+1. **InkHero** — built. The signature piece.
+2. **EaseAtlas** — built. The instrument; its curves retime the hero.
+3. **InkReveal** — next: the dissolve as a standalone media reveal with a `progress` prop.
+4. **MaskReveal** — the line-mask text reveal as its own component.
+5. **ScrollScore** — the station timeline helper: windows in, quick setters out.
+
+One stack for all five: React 19, TypeScript, Tailwind v4 semantic tokens,
+GSAP ScrollTrigger where scroll is involved. One easing vocabulary. One
 `data-*` API.
-
-1. **EaseAtlas** — built.
-2. **MaskReveal** — line-mask text reveal on SplitText (`mask`, `autoSplit`,
-   `aria`), word and character escalation, scroll-scrubbed variant.
-3. **Cursor** — two-body dot and ring with exponential smoothing;
-   `default / link / drag / media / hidden` states from delegated `data-cursor`
-   attributes. Never replaces focus states; coarse pointers get a designed
-   fallback.
-4. **MediaReveal** — mask-not-opacity image reveal with clipped-frame parallax
-   that never transforms the trigger element.
-5. **Preloader** — honest, monotonic, timeout-safe progress with an anti-strobe
-   floor and a warm-cache skip.
 
 ## Non-negotiables
 
