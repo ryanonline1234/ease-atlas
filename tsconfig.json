@@ -23,7 +23,8 @@
       "@/*": [
         "./src/*"
       ]
-    }
+    },
+    "erasableSyntaxOnly": true
   },
   "include": [
     "src",

@@ -125,6 +125,62 @@ describe('ink hero: the station rail and the pointer', () => {
   })
 })
 
+
+describe('ink hero: install-safety at runtime', () => {
+  it('falls back to a visible <img> when the image host sends no CORS headers', async () => {
+    const page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
+    const errors: string[] = []
+    page.on('pageerror', (e) => errors.push(String(e)))
+    // A real second origin that sends no CORS headers. (A Playwright route.fulfill response
+    // bypasses the CORS check, so it cannot stand in for a misconfigured image host.)
+    const fs = await import('node:fs')
+    const http = await import('node:http')
+    const bytes = fs.readFileSync('playground/public/og.jpg')
+    const srv = http.createServer((_req, res) => { res.writeHead(200, { 'content-type': 'image/jpeg' }); res.end(bytes) })
+    await new Promise<void>((r) => srv.listen(5198, r))
+    await page.goto(`http://localhost:${PORT}/?demo=ink-hero&dark=0&imageSrc=${encodeURIComponent('http://127.0.0.1:5198/ink.jpg')}`)
+    await page.locator('[data-ink-hero]').waitFor()
+    await page.waitForFunction(() => document.querySelector('[data-motion="ink-canvas"]')?.classList.contains('hidden'), null, { timeout: 15_000 })
+    const r = await page.evaluate(() => {
+      const img = document.querySelector<HTMLImageElement>('[data-ink-hero] img')!
+      return { crossOriginAttr: img.getAttribute('crossorigin'), srOnly: img.classList.contains('sr-only'), loaded: img.complete && img.naturalWidth > 0 }
+    })
+    expect(r.crossOriginAttr).toBeNull()
+    expect(r.srOnly).toBe(false)
+    expect(r.loaded).toBe(true)
+    expect(errors).toEqual([])
+    await page.close()
+    srv.close()
+  })
+
+  it('renders a procedural ink field when no image is given', async () => {
+    const page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
+    const errors: string[] = []
+    page.on('pageerror', (e) => errors.push(String(e)))
+    page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()) })
+    await page.goto(`http://localhost:${PORT}/?demo=ink-hero&dark=0&imageSrc=`)
+    await page.locator('[data-ink-hero]').waitFor()
+    await page.evaluate(() => window.scrollTo(0, 2700))
+    await page.waitForTimeout(900)
+    const shot = (await page.locator('[data-motion="ink-stage"]').screenshot()).toString('base64')
+    const stats = await page.evaluate(async (b64) => {
+      const c = document.querySelector<HTMLCanvasElement>('[data-motion="ink-canvas"]')!
+      const bmp = await createImageBitmap(await (await fetch('data:image/png;base64,' + b64)).blob())
+      const off = document.createElement('canvas'); off.width = 64; off.height = 40
+      const ctx = off.getContext('2d')!; ctx.drawImage(bmp, 0, 0, 64, 40)
+      const d = ctx.getImageData(0, 0, 64, 20).data // top half: the ridges, above the scrim and the type
+      let min = 255, max = 0
+      for (let i = 0; i < d.length; i += 4) { const l = (d[i]! + d[i + 1]! + d[i + 2]!) / 3; min = Math.min(min, l); max = Math.max(max, l) }
+      return { hidden: c.classList.contains('hidden'), imgCount: document.querySelectorAll('[data-ink-hero] img').length, lumaRange: max - min }
+    }, shot)
+    expect(stats.hidden).toBe(false)
+    expect(stats.imgCount).toBe(0)
+    expect(stats.lumaRange).toBeGreaterThan(40)
+    expect(errors).toEqual([])
+    await page.close()
+  })
+})
+
 describe('ink hero: captures for the taste review', () => {
   it('writes light and dark stills at the three stations', async () => {
     const fs = await import('node:fs')

@@ -1,15 +1,27 @@
 # ease-atlas
 
-Five web-motion primitives for React, built on measured easing constants rather
-than invented ones.
+![Ink Hero: scrolling develops an ink landscape from a faint wash to a full print](docs/ink-hero.gif)
 
-**Status:** two components are built, verified, and published to the 21st.dev
-registry (submitted for the catalog's Featured review on 2026-10-09):
+**Ink Hero**, Featured on 21st.dev: a scroll hero whose image develops from ink
+wash to print as you scroll. [Live demo](https://ease-atlas.vercel.app) ·
+[Registry page](https://21st.dev/@ryanonline1234/components/ink-hero)
 
-- InkHero — https://21st.dev/@ryanonline1234/components/ink-hero — `npx @21st-dev/cli add @ryanonline1234/ink-hero`
-- EaseAtlas — https://21st.dev/@ryanonline1234/components/ease-atlas — `npx @21st-dev/cli add @ryanonline1234/ease-atlas`
+```bash
+npx @21st-dev/cli add @ryanonline1234/ink-hero
+```
 
-Live playground: https://ease-atlas.vercel.app. This repository is canonical;
+What you need: React 19 and Tailwind v4; `gsap` and `@gsap/react` are installed
+for you. The 21st CLI asks for a free 21st.dev API key. Works as-is in Next.js
+App Router (it is a Client Component) and in Vite. shadcn/ui theme tokens are
+recommended, not required. A cross-origin image needs CORS headers for the
+dissolve, otherwise it is shown with a plain frame; with no image at all the
+dissolve paints ink ridges.
+
+Part of a small set of web-motion primitives for React built on measured
+easing constants rather than invented ones. EaseAtlas, the curve instrument,
+is published by link only:
+[registry page](https://21st.dev/@ryanonline1234/components/ease-atlas) ·
+`npx @21st-dev/cli add @ryanonline1234/ease-atlas`. This repository is canonical;
 the registry is a mirror.
 
 ## InkHero
@@ -48,7 +60,7 @@ public-domain landscape attributed to Sesshū Tōyō (Honolulu Museum of Art).
 
 | Prop | Default | What it does |
 |---|---|---|
-| `image` | — | `{ src, alt }`; cross-origin images need CORS for the texture |
+| `image` | procedural ink ridges | `{ src, alt }`. Cross-origin needs CORS for the dissolve; without it the image shows in a plain frame and one warning is logged |
 | `headline` | — | A string with newlines or an array of lines; each line gets its own mask |
 | `eyebrow`, `caption`, `cta`, `nav` | — | The small type around the headline |
 | `ease` | `'ink'` | A `NAMED_CURVES` key, a `cubic-bezier()` string, or a GSAP ease name |

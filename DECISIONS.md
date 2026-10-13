@@ -202,3 +202,60 @@ the per-component view counters are not in a fresh page's payload, so
 `scripts/capture-metrics.mjs` records what is present and the parser gets
 revisited at the first monthly capture. Gates now running: K2 (30 days after
 submit), K3 (60 days after the third Featured), K4 (90 days).
+
+## 2026-10-13 — Ink Hero Featured; Ease Atlas not pursued
+`21st components --json` on 2026-10-13: ink-hero (20923) `public`, `featured`;
+ease-atlas (20924) `unlisted`, `needs_changes`. Ryan: "I'm okay with moving on
+from" Ease Atlas, so it is not resubmitted and counts as a non-Featured slot in
+K2. K2 is now 1 of 5; the remaining slots are InkReveal, MaskReveal and
+ScrollScore, and K2 needs two of those three Featured within 30 days of the
+last submit. K3 and K4 clocks start at the third Featured, not the first. The
+pause rule tied to Hack Club Terra applies from 2026-10-19, when Terra starts.
+
+## 2026-10-13 — Cold install found two breaking defects and one silent one
+Installed the exact published file the way the registry places it into a fresh
+Next.js 16 App Router project with shadcn and a fresh Vite 8 project with plain
+Tailwind v4 (file-level, not via `21st add`, so no daily retrieval was spent and
+no self-install was added to the CLI counter). Found:
+1. Next.js build failed (`c.useRef is not a function`): no `'use client'`.
+   Every App Router install broke. Fixed; a unit test pins the first line.
+2. Vite build failed: its default tsconfig has `erasableSyntaxOnly`, which
+   rejects TypeScript parameter properties in the WebGL class. Fixed with plain
+   fields; the repo's tsconfig now enables `erasableSyntaxOnly` too.
+3. Without shadcn tokens the section background is transparent, which resolved
+   the shader's paper to black. Transparent colors now walk up to the nearest
+   ancestor background, else white; unit-tested.
+The registry already declares `gsap` and `@gsap/react`, and a logged-out
+`21st add` points strangers at `$API_KEY_21ST`, so the API key is the first
+step for every stranger. Neither is fixable in the file; both are in the README.
+
+## 2026-10-13 — Image CORS: fall back visibly; keep both requests CORS-mode
+The old code failed silently when an image host sent no CORS headers: the
+texture never loaded and the crossorigin `<img>` fallback failed too, leaving a
+blank hero. Now a texture failure logs one warning and shows the image with the
+clip-path frame. First attempt dropped `crossOrigin` from the visible `<img>`;
+the cold test then showed the 21st.dev CDN only sends
+`Access-Control-Allow-Origin` to requests that carry an Origin and serves the
+plain response without `Vary`, so Chromium cached the plain response and the
+texture request reused it and failed. The visible `<img>` now stays CORS-mode
+and drops the attribute only after a texture failure, which makes the browser
+refetch it plainly. Probe tests the fallback against a real second origin;
+Playwright's `route.fulfill` bypasses CORS and cannot stand in for a bad host.
+Positive control: reintroducing the old attribute fails that test.
+
+## 2026-10-13 — No-image mode: procedural ink ridges
+Omitting `image` now develops three fbm ridges, far to near, ink thinning
+toward each foot. Removes the image as a required asset and makes the hero a
+text-first option. Rejected: a flat ink field or gradient (reads as a
+placeholder, not as the same piece).
+
+## 2026-10-13 — Revision drafted, held for Ryan
+The fixes and a search-led description (261 of 280 characters: "Scroll image
+reveal hero: a WebGL ink dissolve (sumi-e) …", ending with the install
+command) are in CLI Review draft 48e12df1-8efe-486f-b72a-b50e2d67e20c for
+component 20923. Not published: the docs do not say whether publishing a
+revision keeps Featured status, and Featured is the K2 asset. Rejected from the
+advice: putting Next.js and Vite notes in the description (280-character limit;
+they live in the file header and README instead); moving the demo image (the
+registry already mirrors it to its CDN); fixing the metrics parser (it was
+correct; a fresh page simply had no counts).

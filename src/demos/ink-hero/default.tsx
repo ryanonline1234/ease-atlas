@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -75,7 +77,7 @@ export default function Demo(props: Partial<typeof settings>) {
       {/* the three rules lenis/dist/lenis.css would set; inlined so the demo stays one file */}
       <style>{`html.lenis,html.lenis body{height:auto}.lenis.lenis-smooth{scroll-behavior:auto!important}.lenis.lenis-stopped{overflow:clip}`}</style>
       <InkHero
-        image={{ src: s.imageSrc, alt: 'Ink landscape attributed to Sesshū Tōyō: mountains and a river in splashed ink on paper' }}
+        image={s.imageSrc ? { src: s.imageSrc, alt: 'Ink landscape attributed to Sesshū Tōyō: mountains and a river in splashed ink on paper' } : undefined}
         eyebrow={s.eyebrow}
         headline={s.headline}
         caption={s.caption}

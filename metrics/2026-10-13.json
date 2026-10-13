@@ -1,0 +1,40 @@
+{
+  "captured_at": "2026-10-13T22:49:13.010Z",
+  "components": [
+    {
+      "slug": "ink-hero",
+      "url": "https://21st.dev/@ryanonline1234/components/ink-hero",
+      "http": 200,
+      "view_count": 1506,
+      "code_copy_count": 2,
+      "prompt_copy_count": 2,
+      "cli_download_count": 0,
+      "downloads_count": 0,
+      "likes_count": 0,
+      "bookmarks_count": 12,
+      "review_status": "featured",
+      "metrics_block_found": true
+    },
+    {
+      "slug": "ease-atlas",
+      "url": "https://21st.dev/@ryanonline1234/components/ease-atlas",
+      "http": 200,
+      "view_count": 2,
+      "code_copy_count": 0,
+      "prompt_copy_count": 2,
+      "cli_download_count": 0,
+      "downloads_count": 0,
+      "likes_count": 0,
+      "bookmarks_count": 0,
+      "review_status": "needs_changes",
+      "metrics_block_found": true
+    }
+  ],
+  "github": {
+    "forks": 0,
+    "open_issues": 0,
+    "stars": 0,
+    "watchers": 0,
+    "issues_or_prs_from_others": 0
+  }
+}

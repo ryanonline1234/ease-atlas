@@ -103,3 +103,16 @@ describe('colorToRgb', () => {
     expect(colorToRgb('oklch(0.145 0 0)')).toBeNull()
   })
 })
+
+describe('install-safety guards', () => {
+  it('starts with a use client directive so Next.js App Router can import it', async () => {
+    const fs = await import('node:fs')
+    const src = fs.readFileSync(new URL('./ink-hero.tsx', import.meta.url), 'utf8')
+    expect(src.split('\n')[0]).toBe("'use client'")
+  })
+  it('treats a fully transparent color as unresolved so the paper falls back to a real background', () => {
+    expect(colorToRgb('rgba(0, 0, 0, 0)')).toBeNull()
+    expect(colorToRgb('transparent')).toBeNull()
+    expect(colorToRgb('rgba(10, 20, 30, 0.5)')).toEqual([10 / 255, 20 / 255, 30 / 255])
+  })
+})

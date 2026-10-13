@@ -1,7 +1,29 @@
+'use client'
+
 /**
  * ink-hero — a sticky hero scored in three stations. As you scroll, the image
  * develops from a faint wash to a full print, the frame grows to full bleed,
  * the headline bleeds in line by line, and the nav settles.
+ *
+ * Install
+ *   npx @21st-dev/cli add @ryanonline1234/ink-hero   (needs a free 21st.dev API key)
+ *   Needs React 19, gsap 3.13+ and @gsap/react (declared, installed for you), and
+ *   Tailwind v4. shadcn/ui theme tokens (bg-background, text-foreground, ...) are
+ *   recommended; without them the paper color is read from the nearest ancestor
+ *   that has a background, else white.
+ *
+ * Image
+ *   A cross-origin image needs CORS headers to become a WebGL texture. Without
+ *   them the hero shows the image with a clip-path frame instead of the dissolve
+ *   and logs one warning. Same-origin images always work. Omit `image` and the
+ *   dissolve develops a procedural field of ink ridges instead.
+ *
+ * Frameworks
+ *   Next.js App Router: this is a Client Component ('use client' above); import
+ *   it from a Server Component page as-is.
+ *   Vite: nothing extra; Tailwind v4 picks up the classes from src/.
+ *   The demo's smooth scroll and station snapping use Lenis. The component never
+ *   owns scroll and works with native scrolling.
  *
  * Architecture (awwwards-motion skill, scroll-architecture §2.2 / §6.1 / §7):
  * one ScrollTrigger on a static section publishes one progress value h; every
@@ -163,8 +185,12 @@ export function colorToRgb(css: string): [number, number, number] | null {
     const hex = m[1]!.length === 3 ? m[1]!.split('').map((c) => c + c).join('') : m[1]!
     return [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255) as [number, number, number]
   }
-  m = s.match(/^rgba?\(\s*([\d.]+)\s*,?\s*([\d.]+)\s*,?\s*([\d.]+)/i)
-  if (m) return [+m[1]! / 255, +m[2]! / 255, +m[3]! / 255]
+  if (/^transparent$/i.test(s)) return null
+  m = s.match(/^rgba?\(\s*([\d.]+)\s*,?\s*([\d.]+)\s*,?\s*([\d.]+)\s*(?:[,/]\s*([\d.]+)(%?))?\s*\)/i)
+  if (m) {
+    if (m[4] !== undefined && Number(m[4]) === 0) return null // fully transparent: not a color to paint with
+    return [+m[1]! / 255, +m[2]! / 255, +m[3]! / 255]
+  }
   return null
 }
 
@@ -195,7 +221,7 @@ uniform float uScale;
 uniform float uFeather;
 uniform float uGrain;
 uniform float uNoiseScale;
-uniform float uHasImage;
+uniform float uSource; // 0 blank paper (image loading), 1 image texture, 2 procedural ink ridges
 uniform vec3 uPaper;
 uniform vec3 uInk;
 uniform vec2 uPointer;
@@ -234,12 +260,28 @@ float fbm(vec2 p) {
   return v;
 }
 
+// No image: three ridges, far to near, each a brush-loaded fbm silhouette whose
+// ink thins toward its foot, the mist between ridges left as paper.
+vec3 inkRidges(vec2 uv, float aspect) {
+  vec3 col = uPaper;
+  for (int i = 0; i < 3; i++) {
+    float fi = float(i);
+    float freq = 1.6 + fi * 1.1;
+    float h = (0.66 - fi * 0.17) + (0.12 + fi * 0.03) * (fbm(vec2(uv.x * aspect * freq + fi * 7.31, fi * 3.7)) - 0.5) * 2.0;
+    float below = smoothstep(h + 0.003, h - 0.003, uv.y);
+    float depth = clamp((h - uv.y) / (0.22 + fi * 0.05), 0.0, 1.0);
+    float dens = (0.22 + fi * 0.24) * (1.0 - 0.6 * depth) + 0.06 * (fbm(uv * vec2(aspect, 1.0) * 24.0 + fi * 5.0) - 0.5);
+    col = mix(col, uInk, below * clamp(dens, 0.0, 1.0));
+  }
+  return col;
+}
+
 void main() {
   vec2 uv = vUv;
   float aspect = uResolution.x / uResolution.y;
 
   vec2 tuv = 0.5 + (uv - 0.5) * uCover / uScale;
-  vec3 img = mix(uPaper, texture(uTex, tuv).rgb, uHasImage);
+  vec3 img = uSource > 1.5 ? inkRidges(tuv, aspect) : mix(uPaper, texture(uTex, tuv).rgb, clamp(uSource, 0.0, 1.0));
 
   // the sheet: a hand-brushed frame while inset > 0; a clean, edge-to-edge print at inset 0
   vec2 d = min(uv, 1.0 - uv);
@@ -301,13 +343,15 @@ class InkGL {
   private image: HTMLImageElement | null = null
   private last: GLUniforms | null = null
   private lost = false
+  private source = 0
+  private canvas: HTMLCanvasElement
+  private onReady?: (ok: boolean) => void
   /** True when the surface can draw. Flips on context loss and restoration. */
   ok = false
 
-  constructor(
-    private canvas: HTMLCanvasElement,
-    private onReady?: (ok: boolean) => void,
-  ) {
+  constructor(canvas: HTMLCanvasElement, onReady?: (ok: boolean) => void) {
+    this.canvas = canvas
+    this.onReady = onReady
     canvas.addEventListener('webglcontextlost', this.onLost)
     canvas.addEventListener('webglcontextrestored', this.onRestored)
     this.ok = this.init()
@@ -374,7 +418,7 @@ class InkGL {
     const aPos = gl.getAttribLocation(program, 'aPos')
     gl.enableVertexAttribArray(aPos)
     gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0)
-    for (const name of ['uTex', 'uResolution', 'uCover', 'uProgress', 'uInset', 'uWash', 'uScale', 'uFeather', 'uGrain', 'uNoiseScale', 'uHasImage', 'uPaper', 'uInk', 'uPointer', 'uPointerR'])
+    for (const name of ['uTex', 'uResolution', 'uCover', 'uProgress', 'uInset', 'uWash', 'uScale', 'uFeather', 'uGrain', 'uNoiseScale', 'uSource', 'uPaper', 'uInk', 'uPointer', 'uPointerR'])
       this.loc.set(name, gl.getUniformLocation(program, name))
     this.tex = gl.createTexture()
     gl.bindTexture(gl.TEXTURE_2D, this.tex)
@@ -384,7 +428,7 @@ class InkGL {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([128, 128, 128, 255]))
     gl.uniform1i(this.loc.get('uTex')!, 0)
-    gl.uniform1f(this.loc.get('uHasImage')!, 0)
+    gl.uniform1f(this.loc.get('uSource')!, this.source)
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1)
     return true
   }
@@ -395,7 +439,13 @@ class InkGL {
     if (!gl || !this.tex || this.lost) return
     gl.bindTexture(gl.TEXTURE_2D, this.tex)
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img)
-    gl.uniform1f(this.loc.get('uHasImage')!, 1)
+    this.setSource(1)
+  }
+
+  /** 0 blank paper, 1 the image texture, 2 procedural ink ridges. */
+  setSource(source: number) {
+    this.source = source
+    if (this.gl && this.program && !this.lost) this.gl.uniform1f(this.loc.get('uSource')!, source)
   }
 
   resize(w: number, h: number, dpr: number) {
@@ -458,6 +508,7 @@ class InkGL {
 function resolveCssColor(v: string): [number, number, number] | null {
   const direct = colorToRgb(v)
   if (direct) return direct
+  if (/^transparent$/i.test(v.trim()) || /^rgba?\([^)]*[,/]\s*0\s*\)$/i.test(v.trim())) return null
   try {
     const cv = document.createElement('canvas')
     cv.width = cv.height = 1
@@ -467,29 +518,19 @@ function resolveCssColor(v: string): [number, number, number] | null {
     ctx.fillStyle = v
     ctx.fillRect(0, 0, 1, 1)
     const d = ctx.getImageData(0, 0, 1, 1).data
+    if (d[3] === 0) return null
     return [d[0]! / 255, d[1]! / 255, d[2]! / 255]
   } catch {
     return null
   }
 }
 
+/** The color to paint with: the element's own, or for a transparent background the nearest ancestor's, else a default. */
 function resolveColor(el: Element, prop: 'color' | 'backgroundColor'): [number, number, number] {
-  const v = getComputedStyle(el)[prop]
-  const direct = colorToRgb(v)
-  if (direct) return direct
-  try {
-    const cv = document.createElement('canvas')
-    cv.width = cv.height = 1
-    const ctx = cv.getContext('2d')
-    if (ctx) {
-      ctx.fillStyle = '#000'
-      ctx.fillStyle = v
-      ctx.fillRect(0, 0, 1, 1)
-      const d = ctx.getImageData(0, 0, 1, 1).data
-      return [d[0]! / 255, d[1]! / 255, d[2]! / 255]
-    }
-  } catch {
-    /* fall through */
+  for (let n: Element | null = el; n; n = n.parentElement) {
+    const rgb = resolveCssColor(getComputedStyle(n)[prop])
+    if (rgb) return rgb
+    if (prop === 'color') break
   }
   return prop === 'color' ? [0.1, 0.1, 0.1] : [1, 1, 1]
 }
@@ -510,7 +551,8 @@ function useReducedMotion(): boolean {
 const cn = (...xs: Array<string | false | null | undefined>) => xs.filter(Boolean).join(' ')
 
 export interface InkHeroProps {
-  image: { src: string; alt: string }
+  /** Omit for a procedural field of ink ridges. A cross-origin src needs CORS headers for the dissolve. */
+  image?: { src: string; alt: string }
   headline: string | string[]
   eyebrow?: string
   caption?: string
@@ -653,21 +695,35 @@ export default function InkHero({
         setCaption((1 - v.caption) * 101)
         setCta((1 - v.cta) * 101)
         setScrim(v.scrim)
-        if (gl.ok) {
+        if (gl.ok && !texFailed) {
           const { feather: f, grain: g, noiseScale: ns } = look.current
           gl.render({ progress: v.develop, inset: v.inset, wash: v.wash, scale: v.scale, feather: f, grain: g, noiseScale: ns, paper, ink, pointer, pointerR })
         }
       }
 
-      // ---- image: cross-origin texture; the <img> stays as the fallback and for assistive tech
-      const img = new Image()
-      img.crossOrigin = 'anonymous'
-      img.decoding = 'async'
-      img.onload = () => {
-        gl.setImage(img)
-        paint(lastH)
+      // ---- image: a CORS texture for the dissolve; the <img> is the fallback and the assistive path
+      let texFailed = false
+      const src = image?.src
+      const img = src ? new Image() : null
+      if (img && src) {
+        img.crossOrigin = 'anonymous'
+        img.decoding = 'async'
+        img.onload = () => {
+          gl.setImage(img)
+          paint(lastH)
+        }
+        img.onerror = () => {
+          texFailed = true
+          console.warn(
+            `[ink-hero] ${src} could not become a WebGL texture (usually the host sends no CORS headers). ` +
+              'Showing the image without the ink dissolve. Serve it same-origin or from a host that sends Access-Control-Allow-Origin.',
+          )
+          setGlOk(false)
+        }
+        img.src = src
+      } else {
+        gl.setSource(2)
       }
-      img.src = image.src
 
       // ---- size the canvas to the stage; re-render at the last progress
       const ro = new ResizeObserver(([entry]) => {
@@ -737,11 +793,14 @@ export default function InkHero({
         ro.disconnect()
         mo.disconnect()
         scheme?.removeEventListener?.('change', onScheme)
-        img.onload = null
+        if (img) {
+          img.onload = null
+          img.onerror = null
+        }
         gl.dispose()
       }
     },
-    { scope: root, dependencies: [E, image.src, lines.length, dprCap, reduced, pointerDevelops] },
+    { scope: root, dependencies: [E, image?.src, lines.length, dprCap, reduced, pointerDevelops] },
   )
 
   const stationLabels = ['paper', 'wash', 'print']
@@ -782,23 +841,28 @@ export default function InkHero({
           aria-hidden="true"
           className={cn('absolute inset-0 block h-full w-full', glOk === false && 'hidden')}
         />
-        <img
-          ref={imgRef}
-          src={image.src}
-          alt={image.alt}
-          crossOrigin="anonymous"
-          decoding="async"
-          className={cn('absolute inset-0 h-full w-full object-cover', glOk !== false && 'sr-only')}
-          style={
-            glOk === false
-              ? {
-                  clipPath: 'inset(calc(var(--ink-inset) * 100%))',
-                  opacity: 'calc(0.15 + 0.85 * var(--ink-develop))',
-                  transform: 'scale(calc(1.1 - 0.1 * var(--ink-progress)))',
-                }
-              : undefined
-          }
-        />
+        {image ? (
+          <img
+            ref={imgRef}
+            src={image.src}
+            alt={image.alt}
+            // Same request mode as the texture so the two share one cached response (a CDN that
+            // only sends CORS headers to requests with an Origin would otherwise poison the
+            // texture). Dropped after a texture failure, which makes the browser refetch it plainly.
+            crossOrigin={glOk === false ? undefined : 'anonymous'}
+            decoding="async"
+            className={cn('absolute inset-0 h-full w-full object-cover', glOk !== false && 'sr-only')}
+            style={
+              glOk === false
+                ? {
+                    clipPath: 'inset(calc(var(--ink-inset) * 100%))',
+                    opacity: 'calc(0.15 + 0.85 * var(--ink-develop))',
+                    transform: 'scale(calc(1.1 - 0.1 * var(--ink-progress)))',
+                  }
+                : undefined
+            }
+          />
+        ) : null}
 
         {/* scrim under the type at the print station */}
         <div

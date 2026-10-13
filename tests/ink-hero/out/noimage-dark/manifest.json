@@ -1,0 +1,25 @@
+{
+  "schema": "awwwards-motion/stills@1",
+  "url": "http://localhost:5178/?demo=ink-hero&dark=1&imageSrc=",
+  "mode": "scroll",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "dpr": 1
+  },
+  "reducedMotion": "no-preference",
+  "diagnostics": {
+    "pageErrors": [],
+    "consoleErrors": [],
+    "consoleWarningCount": 0,
+    "failedRequests": []
+  },
+  "frames": [
+    {
+      "index": 0,
+      "progress": 0.75,
+      "file": "tests/ink-hero/out/noimage-dark/000_p0.750_y002700.png",
+      "label": "y002700"
+    }
+  ]
+}

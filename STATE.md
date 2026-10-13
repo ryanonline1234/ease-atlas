@@ -1,35 +1,46 @@
 # State — ease-atlas
 
-_Updated: 2026-10-09_
+_Updated: 2026-10-13_
 
 ## Now
 
-**Published.** Both components are on 21st.dev and in the Featured review queue:
-
-- InkHero — https://21st.dev/@ryanonline1234/components/ink-hero (component 20923, in review)
-- EaseAtlas — https://21st.dev/@ryanonline1234/components/ease-atlas (component 20924, in review)
-
-Live playground: https://ease-atlas.vercel.app (CLI-deployed, manual redeploys).
-Repo is canonical. Day-zero metrics: `metrics/2026-10-10.json`. Inbound log: `metrics/inbound.md`.
-Draft allowance: 18/20 remaining.
-
-Verification state unchanged since the last commit: spec 72/76, probe green (rail + pointer
-included), frame detector PASS, 43 unit tests, typecheck clean.
+- **InkHero is Featured** on 21st.dev (component 20923, public, featured).
+  https://21st.dev/@ryanonline1234/components/ink-hero
+- **EaseAtlas** (20924) came back `needs_changes`; Ryan chose not to pursue it. Unlisted.
+- Studio, last 30 days on 2026-10-13: 1,503 views, 6 copies, 12 bookmarks, 3 profile
+  views, 0 clicks out, 0 CLI installs, weekly rank 551 of 1,004 authors
+  (`metrics/2026-10-13-studio.png`). Page payload: `metrics/2026-10-13.json`.
+- **Revision drafted, not published:** draft 48e12df1-8efe-486f-b72a-b50e2d67e20c fixes
+  the Next.js build (`'use client'`), the Vite build (no parameter properties), black
+  paper without shadcn tokens, and the silent blank on CORS-less images; adds the
+  no-image mode and a search-led description. Publish only on Ryan's go:
+  `21st publish ./src/components/ui/ink-hero.tsx --component component:20923 --demo ./src/demos/ink-hero/default.tsx --draft draft:48e12df1-8efe-486f-b72a-b50e2d67e20c --auto --json`,
+  then confirm `21st components --json` still shows `featured`; if not, `21st resubmit ink-hero`.
+- Verified on 2026-10-13: 45 unit tests, typecheck with `erasableSyntaxOnly`, probe 7/7
+  (CORS fallback against a real no-CORS origin, no-image mode, rail, pointer), spec 72/76,
+  fresh Next.js 16 + shadcn and Vite 8 + plain Tailwind v4 projects build and render the
+  dissolve with a clean console.
+- Playground: https://ease-atlas.vercel.app. The Vercel project is git-connected: a push
+  to main deploys production.
+- Gates: K2 1 of 5 (needs two of InkReveal, MaskReveal, ScrollScore). K3 and K4 start at
+  the third Featured.
 
 ## Next
 
-1. **Watch the Featured review.** `21st components --json` shows `reviewStatus`. "Needs
-   changes" → read the feedback, fix, `21st publish … --component component:<id>`, then
-   `21st submit <slug>` again. Gate K2: ≥3 of 5 Featured within 30 days of the last submit
-   (only two submitted so far; the extracted parts make up the five).
-2. **Monthly capture on the 1st:** `node scripts/capture-metrics.mjs` plus a Studio dashboard
-   screenshot into `metrics/`; log any contact in `metrics/inbound.md`. First capture
-   2026-11-01. Fix the view-counter parser then, against a page that has counts.
-3. **InkReveal next:** extract the dissolve as a standalone media reveal with a `progress`
-   prop (hover / scroll / controlled), then MaskReveal and ScrollScore from the hero.
-4. Rule still applies: a week without Terra's ten logged hours is a week ease-atlas pauses.
+1. **Ryan: publish the revision or not** (command above). Then set the 21st.dev profile's
+   website and GitHub links; "Clicks out to you" counts those, and they are empty.
+2. **Monthly capture on the 1st** (first 2026-11-01): `node scripts/capture-metrics.mjs`,
+   a Studio screenshot into `metrics/`, any contact into `metrics/inbound.md`.
+3. **InkReveal next:** the dissolve as a standalone media reveal with a `progress` prop
+   (hover, scroll, or controlled), then MaskReveal and ScrollScore. K2 needs two of three.
+4. From 2026-10-19: a week without Terra's ten logged hours is a week ease-atlas pauses.
 
 ## Gotchas
+
+- The 21st.dev CDN sends CORS headers only to requests with an Origin and caches the plain
+  response without `Vary`. Never request the same image URL in two modes on one page.
+- Playwright `route.fulfill` bypasses CORS; test a bad image host with a real second origin.
+- Self-installs count. Test installs file-level in a scratch project, not with `21st add`.
 
 - Registry auto-cover capture refuses demos that link off-origin (`?demo=` links). Keep the
   registry demos self-contained; supply covers with `--preview` when in doubt.

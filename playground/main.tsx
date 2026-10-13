@@ -11,6 +11,8 @@ type DemoName = keyof typeof demos
 const params = new URLSearchParams(location.search)
 const name = (params.get('demo') ?? 'ink-hero') as DemoName
 const Demo = demos[name] ?? demos['ink-hero']
+// probe hook: ?imageSrc=<url> (empty for the no-image mode) overrides the demo's image
+const demoProps: Record<string, string> = params.has('imageSrc') ? { imageSrc: params.get('imageSrc') ?? '' } : {}
 
 function Shell() {
   return (
@@ -34,7 +36,7 @@ function Shell() {
         </button>
       </nav>
       <Suspense fallback={null}>
-        <Demo />
+        <Demo {...demoProps} />
       </Suspense>
     </>
   )
