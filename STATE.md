@@ -27,8 +27,13 @@ _Updated: 2026-10-13_
 
 ## Next
 
-1. **Ryan: publish the revision or not** (command above). Then set the 21st.dev profile's
-   website and GitHub links; "Clicks out to you" counts those, and they are empty.
+1. **Revision publish: weighed 2026-10-13, rec = wait until Mon 2026-10-19.** Publishing a
+   revision sends Ink Hero back into review (Ryan confirmed), which takes it out of the catalog
+   for the review window (the first review took about 3 days) during the newness spike and the
+   Week 42 list. The fixes help a few code-copiers a week. Trigger to publish sooner: anyone
+   reports the Next.js build error. If the draft has expired by then, re-run the `--prepare`
+   command from DECISIONS (2026-10-13). Also: Ryan sets his 21st.dev profile's website and GitHub
+   links; "Clicks out to you" counts those, and they are empty.
 2. **Monthly capture on the 1st** (first 2026-11-01): `node scripts/capture-metrics.mjs`,
    a Studio screenshot into `metrics/`, any contact into `metrics/inbound.md`.
 3. **InkReveal next:** the dissolve as a standalone media reveal with a `progress` prop
