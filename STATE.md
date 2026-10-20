@@ -15,12 +15,10 @@ _Updated: 2026-10-20_
   Demo video UPLOADED 2026-10-20 through the component page's Edit dialog (18 s, 4:3, hover tour then
   paired prints; `docs/media/ink-reveal-demo.mp4`). Its controls panel is marked "Edited" and lacks
   the new Paired toggle; "Reset to detected panel" would add it (Ryan's call).
-- **InkRidges**: draft `747554f3-9b19-4935-b0b2-b3d1e9d5f80c`, NOT published. 2026-10-20: painted
-  sun that blooms last, `moon: 'auto'` on dark paper, vermilion default sun, brushed crests,
-  `scrollDepth` (far ridges lag, the sun sets on scroll). Draft updated 2026-10-20 with this source, description and cover. A draft cannot
-  hold a video; after publishing, upload `docs/media/ink-ridges-demo.mp4` (16 s, 4:3: paint-in, flock,
-  sunset on scroll, moon) through the Edit dialog (memory: 21st-video-media).
-  Editor: https://21st.dev/studio/ryanonline1234/sandbox/fo5UWTruZSQhFfdsghNWpN?source=cli
+- **InkRidges** (22423): PUBLISHED 2026-10-20 on Ryan's go and submitted, `in_review`.
+  https://21st.dev/@ryanonline1234/components/ink-ridges. Supplied 4:3 cover; demo video uploaded
+  through the Edit dialog (16 s, `docs/media/ink-ridges-demo.mp4`). Live preview checked in both
+  themes (painted sun on light paper, moon on dark).
 - Verified 2026-10-20: 84 unit tests, typecheck, build, probes 58/58 (all four components); fresh Next.js 16 and
   Vite 8 projects build and run both (ridges 60 draws per 500 ms visible, 0 offscreen; paired card
   hovers to 1; scroll card 0.20 → 0.89 over 500 px; clean console); real-GPU timing in DECISIONS.
@@ -35,11 +33,8 @@ Featured component back into review. The InkHero revision draft 48e12df1 stays u
 untouched; the fixes live in this repo only. New components (InkRidges) go up as new drafts;
 publishing one still needs Ryan's go.
 
-1. **Publish InkRidges?** Rec: yes, after Ryan looks at `?demo=ink-ridges` (light and dark).
-   `21st publish ./src/components/ui/ink-ridges.tsx --demo ./src/demos/ink-ridges/default.tsx
-   --description "$(cat <desc>)" --tags background,hero,webgl,landscape,animation --preview
-   ./.21st-review/ink-ridges-cover.jpg --draft draft:747554f3-9b19-4935-b0b2-b3d1e9d5f80c --auto
-   --no-open --json`, then `21st submit ink-ridges`. Upload the video afterwards.
+1. **Ink Reveal's preview controls on 21st**: the panel is marked "Edited" and lacks the new Paired
+   toggle; "Reset to detected panel" in the Edit dialog would add it (undoes any hand edits). Rec: yes.
 2. **More InkRidges ideas** (not built): a lake with reflections; pine clusters on the near ridge;
    weather; mist parting around the pointer. Rec: none now; ship what exists and watch metrics.
 3. Monthly metrics capture on 2026-11-01: `node scripts/capture-metrics.mjs` + Studio screenshot.

@@ -5,7 +5,7 @@
 import fs from 'node:fs'
 import { execSync } from 'node:child_process'
 
-const COMPONENTS = ['ink-hero', 'ease-atlas']
+const COMPONENTS = ['ink-hero', 'ease-atlas', 'ink-reveal', 'ink-ridges']
 const USER = 'ryanonline1234'
 const REPO = 'ryanonline1234/ease-atlas'
 

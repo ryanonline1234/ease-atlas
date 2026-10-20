@@ -514,3 +514,11 @@ public page serves it, and the review status stayed `in_review`.
 The Ink Ridges draft cannot hold a video: the CLI review page only stages it
 until "Publish component". Its video goes up the same way right after
 publishing, if Ryan says publish.
+
+## 2026-10-20 — InkRidges published (22423)
+Ryan: "Go ahead publish ink ridges". Published from draft 747554f3 with the
+supplied cover (`--auto`), then `21st submit ink-ridges` → `in_review`. The demo
+video went up through the component's Edit dialog right after publishing (a draft
+cannot hold one). 21st dropped the `landscape` tag (four of five tags kept),
+presumably because it is not one of its existing tags. The monthly metrics
+script now captures all four components.
