@@ -39,10 +39,12 @@ Featured component back into review. The InkHero revision draft 48e12df1 stays u
 untouched; the fixes live in this repo only. New components (InkRidges) go up as new drafts;
 publishing one still needs Ryan's go.
 
-1. **More InkRidges ideas** (not built): a lake with reflections; pine clusters on the near ridge;
-   weather; mist parting around the pointer. Rec: none now; ship what exists and watch metrics.
-2. Monthly metrics capture on 2026-11-01: `node scripts/capture-metrics.mjs` + Studio screenshot.
-3. Pause rule: a week without Terra's ten logged hours pauses ease-atlas.
+1. **Build InkHeadline**, the fifth component (Ryan, 2026-10-20: replaces MaskReveal). Design brief and
+   open choices are in DECISIONS (2026-10-20); build starts on Ryan's go.
+2. **InkLake** (a lake with reflections, its own component): first in line for a second set, which K6
+   allows only after K3 (2026-12-19) and K4 (2027-01-18) pass. Not built or published before then.
+3. Monthly metrics capture on 2026-11-01: `node scripts/capture-metrics.mjs` + Studio screenshot.
+4. Pause rule: a week without Terra's ten logged hours pauses ease-atlas.
 
 ## Gotchas
 

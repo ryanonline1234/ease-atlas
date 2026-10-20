@@ -544,3 +544,16 @@ K3 (adoption: set-median bookmarks ≥60, set-total CLI installs ≥10; freeze b
 2027-01-18. npm and a second set stay deferred until both pass (K6). A revision
 sends a Featured component back into review, so all three Featured components
 are now treated the way Ink Hero is (no revisions) pending Ryan's confirmation.
+
+## 2026-10-20 — Fifth component: an ink headline, not MaskReveal
+Ryan: "go ahead and change the fifth component to an ink-style headline
+component". All three ink pieces were Featured, and the one non-ink piece (Ease
+Atlas) was not. A plain line-mask reveal is one of the most common components
+on 21st. The fifth slot becomes InkHeadline (working name): the headline's
+glyphs soak into the paper word by word, with Ink Reveal's fiber edge and
+pooled rim, then hand off to the real DOM text, so the final state is crisp,
+selectable, responsive and readable by screen readers.
+The lake with reflections, as its own component (Ryan's meaning), would be a
+sixth component, so it is the first candidate for a second set. K6 allows a
+second set only after K3 (2026-12-19) and K4 (2027-01-18) pass. The thresholds
+stay fixed.

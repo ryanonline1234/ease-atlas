@@ -296,7 +296,7 @@ always share the same stops.
    not pursued).
 3. **InkReveal**: built.
 4. **InkRidges**: built (replaces ScrollScore, which stays an internal helper).
-5. **MaskReveal**: the line-mask headline reveal as its own component.
+5. **InkHeadline** (working name): a headline that inks into the paper word by word, then hands off to the real text. Replaces MaskReveal (2026-10-20).
 
 ## Non-negotiables
 
