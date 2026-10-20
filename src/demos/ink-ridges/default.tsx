@@ -4,6 +4,8 @@ import { useState } from 'react'
 // 21st's CLI points this import at its own copy of the component when it publishes.
 import InkRidges from '../../components/ui/ink-ridges'
 
+// Plain values only: 21st builds the preview's controls from this object.
+// The moon is left to the component's default ('auto'), so dark mode shows it.
 const settings = {
   layers: 4,
   seed: 7,
@@ -14,8 +16,6 @@ const settings = {
   paintIn: 2600,
   sun: true,
   sunColor: '#b5402a',
-  // 'auto' paints a pale moon instead of the sun on dark paper; true or false forces one or the other
-  moon: 'auto' as 'auto' | boolean,
   scrollDepth: 0.35,
   glow: 0.45,
   clouds: 0.35,
@@ -40,7 +40,6 @@ export default function Demo(props: Partial<typeof settings>) {
         paintIn={s.paintIn}
         sun={s.sun}
         sunColor={s.sunColor}
-        moon={s.moon}
         scrollDepth={s.scrollDepth}
         glow={s.glow}
         clouds={s.clouds}

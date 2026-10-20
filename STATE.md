@@ -33,8 +33,11 @@ Featured component back into review. The InkHero revision draft 48e12df1 stays u
 untouched; the fixes live in this repo only. New components (InkRidges) go up as new drafts;
 publishing one still needs Ryan's go.
 
-1. **Ink Reveal's preview controls on 21st**: the panel is marked "Edited" and lacks the new Paired
-   toggle; "Reset to detected panel" in the Edit dialog would add it (undoes any hand edits). Rec: yes.
+1. **Revise InkRidges on 21st so its preview gets controls?** Its listing has NO controls panel
+   (Ink Reveal's has one, now with Paired after a reset on 2026-10-20). Likely cause: the demo's
+   settings object held a TS cast (`moon: 'auto' as 'auto' | boolean`), the only non-literal in any
+   of our demos; fixed in the repo (moon left to the component default). Rec: yes, publish the demo
+   as a revision of 22423 and re-check the video afterwards.
 2. **More InkRidges ideas** (not built): a lake with reflections; pine clusters on the near ridge;
    weather; mist parting around the pointer. Rec: none now; ship what exists and watch metrics.
 3. Monthly metrics capture on 2026-11-01: `node scripts/capture-metrics.mjs` + Studio screenshot.
