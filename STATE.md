@@ -16,18 +16,20 @@ _Updated: 2026-10-19_
   shared-context and hover tests, fresh Next.js 16 + shadcn and Vite 8 + plain Tailwind v4
   projects build and run with no added packages (one context, hover, keyboard focus).
   Hero and atlas probes rerun green.
-- **Registry login expired** (HTTP 401). Ryan runs `21st login` before anything below.
+- Registry login: returned HTTP 401 once on 2026-10-19, working again later the same day.
+- **Drafts ready, nothing published:** InkReveal `draft:322ae250-0b96-46a2-afe5-69f855c798fd`
+  (editor https://21st.dev/studio/ryanonline1234/sandbox/7ciD5APhFPFWmyKp4urNmV?source=cli,
+  staged cover supplied); InkHero revision `draft:48e12df1-8efe-486f-b72a-b50e2d67e20c` still active.
 - Playground: https://ease-atlas.vercel.app (git-connected: a push to main deploys).
 
 ## Next (Ryan's decisions, each with a rec)
 
-1. Run `21st login`.
-2. Publish InkReveal and submit it for featuring. Rec: yes. Commands:
-   `21st publish ./src/components/ui/ink-reveal.tsx --demo ./src/demos/ink-reveal/default.tsx --description "<see DECISIONS 2026-10-19>" --tags image,hover,webgl,card,animation --preview ./.21st-review/ink-reveal-cover.jpg --prepare --no-open --json`,
-   review, then `--draft draft:<id> --auto --json`, then `21st submit ink-reveal`.
-3. Publish the InkHero revision (today was the planned date). Rec: yes. The old draft
-   48e12df1 may have expired; re-run the `--prepare` command from DECISIONS 2026-10-13, then
-   `--auto`, then confirm status and `21st resubmit ink-hero` if it dropped to review.
+1. (done: login works again)
+2. Publish InkReveal and submit it for featuring. Rec: yes. Run the same `21st publish` line
+   with `--draft draft:322ae250-0b96-46a2-afe5-69f855c798fd --auto --json`, then `21st submit ink-reveal`.
+3. Publish the InkHero revision (today was the planned date). Rec: yes. Draft 48e12df1 is still
+   active: `--draft draft:48e12df1-8efe-486f-b72a-b50e2d67e20c --auto --json`, then confirm status
+   and `21st resubmit ink-hero` if it dropped to review.
 4. Swap ScrollScore for InkRidges as the fourth component. Rec: yes (visual, distinctive,
    mostly written already in the hero's no-image mode).
 5. Monthly metrics capture on 2026-11-01: `node scripts/capture-metrics.mjs` + Studio screenshot.

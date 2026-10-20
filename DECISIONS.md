@@ -304,3 +304,5 @@ are finer (noiseScale 5).
 re-runs `21st login`. Until then no draft, publish, or submit is possible; the
 InkReveal cover (`.21st-review/ink-reveal-cover.jpg`, four develop stages
 composited) and description are ready.
+Update, same day: the login worked again a few hours later; the InkReveal draft
+(322ae250) was prepared with the composited cover and is held for Ryan's review.
