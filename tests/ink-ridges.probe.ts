@@ -158,8 +158,8 @@ describe('ink ridges: interaction', () => {
     await waitPainted(page)
     const first = await page.locator('[data-ink-ridges]').screenshot()
     await page.getByRole('button', { name: /paint another range/i }).click()
-    await page.waitForTimeout(80)
-    expect(await paint(page)).toBeLessThan(1)
+    // the repaint starts (progress drops below 1); polled, not sampled at a fixed instant
+    await page.waitForFunction(() => Number(getComputedStyle(document.querySelector('[data-ink-ridges]')!).getPropertyValue('--ink-ridges-paint')) < 1, null, { timeout: 2000 })
     await waitPainted(page)
     const second = await page.locator('[data-ink-ridges]').screenshot()
     expect(Buffer.compare(first, second)).not.toBe(0)

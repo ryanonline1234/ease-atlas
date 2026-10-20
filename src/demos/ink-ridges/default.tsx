@@ -22,7 +22,7 @@ export default function Demo(props: Partial<typeof settings>) {
   const [bump, setBump] = useState(0)
   const seed = s.seed + bump
   return (
-    <div className="bg-background text-foreground">
+    <div className="w-full bg-background text-foreground">
       <InkRidges
         layers={s.layers}
         seed={seed}

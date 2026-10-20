@@ -363,3 +363,17 @@ images, so 21st's capture sandbox can render it (unlike InkReveal's demo).
 Rejected: precomputing ridge heights on the CPU into a 1D texture (more code
 than the early-out it would beat); a "breathing" animated ridge line (mountains
 moving reads wrong; only the mist moves).
+
+## 2026-10-20 — Registry media: supply covers and videos ourselves
+InkRidges loads no images, and 21st's capture did generate its cover, but the
+video stayed "skipped" for it too, so the skip is not only the image sandbox;
+the reason is undocumented. Its generated cover was also unusable after the
+demo's wrapper got `w-full` (a zoomed crop with no headline or sun, identical
+on a second regeneration), while before that fix the range sat in the middle
+60% because 21st centers demos in a flex container and the wrapper shrank to
+its text. Covers for both components are captured here at 4:3 (InkRidges at a
+1280×1171 viewport so the 82svh landscape is exactly 4:3) and videos are
+recorded here; Ryan uploads them in the review screen. The review screen itself
+never rendered in Claude's browser pane (stuck on its skeleton; the network log
+showed it loading the draft's own demo file), so whether the starter counter
+Ryan saw is gone is unverified.

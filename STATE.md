@@ -29,18 +29,20 @@ resubmit, withdraw, edit, or delete InkHero (20923) or EaseAtlas (20924).** A re
 Featured component back into review. The InkHero revision draft 48e12df1 stays unpublished and
 untouched; the fixes live in this repo only.
 
-1. **InkReveal publish, in the review screen** (Ryan, signed in):
-   https://21st.dev/studio/ryanonline1234/sandbox/7ciD5APhFPFWmyKp4urNmV?source=cli
-   Upload the cover `.21st-review/ink-reveal-cover.jpg` and the video
-   `.21st-review/ink-reveal-demo.mp4` in the Demos step (the draft's own capture cannot load
-   Wikimedia images), confirm the gallery renders rather than a starter counter, then publish
-   and submit for featuring, or tell Claude to run `--draft draft:322ae250-0b96-46a2-afe5-69f855c798fd --auto --json`
-   and `21st submit ink-reveal`.
+1. **Publish InkReveal and InkRidges, from each draft's review screen** (Ryan, signed in).
+   21st generates no video for either (status "skipped"; InkReveal's capture also cannot load the
+   Wikimedia images), so upload ours from `registry-uploads/` (gitignored):
+   - InkReveal, draft 322ae250: https://21st.dev/studio/ryanonline1234/sandbox/7ciD5APhFPFWmyKp4urNmV?source=cli
+     cover `ink-reveal-cover.jpg` (its status shows failed; upload it), video `ink-reveal-demo.mp4` (10 s).
+   - InkRidges, draft 747554f3: https://21st.dev/studio/ryanonline1234/sandbox/fo5UWTruZSQhFfdsghNWpN?source=cli
+     cover `ink-ridges-cover.jpg` (status ready; confirm it is ours and not 21st's zoomed crop), video
+     `ink-ridges-demo.mp4` (16 s).
+   Confirm each preview shows the component, not a starter counter. Then publish and submit for
+   featuring there, or tell Claude to run `--draft <id> --auto --json` and `21st submit <slug>`.
 2. **InkRidges** built and verified 2026-10-20 (`src/components/ui/ink-ridges.tsx`, demo
-   `src/demos/ink-ridges/default.tsx`, playground `?demo=ink-ridges`): 69 unit tests total, probe
-   8/8 with a positive control on the frame gating, fresh Next.js 16 and Vite 8 projects build and
-   run with a clean console and zero offscreen frames, real-GPU frame timing passes. Not on the
-   registry yet; it loads no images, so 21st can generate its own cover and video.
+   `src/demos/ink-ridges/default.tsx`, playground `?demo=ink-ridges`): probe 8/8 (stable across 3
+   reruns after a polled repaint check), positive control on the frame gating, fresh Next.js 16 and
+   Vite 8 projects clean, real-GPU frame timing passes.
 3. Monthly metrics capture on 2026-11-01: `node scripts/capture-metrics.mjs` + Studio screenshot.
 4. Pause rule starts this week: a week without Terra's ten logged hours pauses ease-atlas.
 
