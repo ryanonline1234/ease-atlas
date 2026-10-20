@@ -1,6 +1,6 @@
 # State — ease-atlas
 
-_Updated: 2026-10-19_
+_Updated: 2026-10-20_
 
 ## Now
 
@@ -36,7 +36,11 @@ untouched; the fixes live in this repo only.
    Wikimedia images), confirm the gallery renders rather than a starter counter, then publish
    and submit for featuring, or tell Claude to run `--draft draft:322ae250-0b96-46a2-afe5-69f855c798fd --auto --json`
    and `21st submit ink-reveal`.
-2. **InkRidges is the fourth component** (Ryan, 2026-10-20). ScrollScore stays repo-only.
+2. **InkRidges** built and verified 2026-10-20 (`src/components/ui/ink-ridges.tsx`, demo
+   `src/demos/ink-ridges/default.tsx`, playground `?demo=ink-ridges`): 69 unit tests total, probe
+   8/8 with a positive control on the frame gating, fresh Next.js 16 and Vite 8 projects build and
+   run with a clean console and zero offscreen frames, real-GPU frame timing passes. Not on the
+   registry yet; it loads no images, so 21st can generate its own cover and video.
 3. Monthly metrics capture on 2026-11-01: `node scripts/capture-metrics.mjs` + Studio screenshot.
 4. Pause rule starts this week: a week without Terra's ten logged hours pauses ease-atlas.
 

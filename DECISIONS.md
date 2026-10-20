@@ -343,3 +343,23 @@ key. So the video is recorded here (`.21st-review/ink-reveal-demo.mp4`, 10 s,
 in the review screen, along with the staged cover. Rejected: inlining the four
 images as data URIs to satisfy the sandbox (a 200 KB wall of base64 in every
 visitor's copied code).
+
+## 2026-10-20 — InkRidges: the fourth component
+Ryan: "yes make ink ridges the fourth component." A procedural sumi-e range
+as a background with children on top. Far-to-near layer geometry, a staggered
+left-to-right brush paint-in on the ink curve, drifting mist, damped pointer
+parallax, a sun disc, and a "paint another range" seed change. React only, no
+images, so 21st's capture sandbox can render it (unlike InkReveal's demo).
+- Frame budget: the loop runs only while painting, drifting, or settling, and
+  only while visible and the tab is shown. Positive control: forcing the loop
+  on drew 11 frames where the component draws 0.
+- First real-GPU measurement was borderline (0.95% dropped at 120 Hz, 3 long
+  frames). Skipping all noise work above each ridge line and using 3-octave
+  fbm for mist, brush texture and brush edge brought it to 0.29% at pixel
+  ratio 1 and 0.79% at 2, with at most 1 long frame.
+- Look: feet dissolve into mist sooner (the ridge line keeps full ink), and ink
+  eases to 62–100% on dark paper so the dark theme reads as moonlight instead
+  of glare.
+Rejected: precomputing ridge heights on the CPU into a 1D texture (more code
+than the early-out it would beat); a "breathing" animated ridge line (mountains
+moving reads wrong; only the mist moves).

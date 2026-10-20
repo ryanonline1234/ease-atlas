@@ -6,6 +6,7 @@ const demos = {
   'ease-atlas': lazy(() => import('../src/demos/ease-atlas/default')),
   'ink-hero': lazy(() => import('../src/demos/ink-hero/default')),
   'ink-reveal': lazy(() => import('../src/demos/ink-reveal/default')),
+  'ink-ridges': lazy(() => import('../src/demos/ink-ridges/default')),
 } as const
 type DemoName = keyof typeof demos
 

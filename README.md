@@ -133,6 +133,49 @@ four public-domain ink paintings by Hasegawa Tōhaku and Sesshū Tōyō.
 | `aspectRatio` | `'4 / 5'` | The card's CSS aspect ratio |
 | `children` | — | Overlay content laid over the image |
 
+## InkRidges
+
+![InkRidges: a sumi-e mountain range brushes itself in, far ridge first, then repaints from a new seed](docs/ink-ridges.gif)
+
+A sumi-e mountain range painted in front of you. Layered ridges, far to near,
+are each laid down with a brush sweep; the ink thins toward every foot and mist
+drifts between them. Every seed paints a different range. Use it as a hero or
+section background: children render on top.
+
+```bash
+npx @21st-dev/cli add @ryanonline1234/ink-ridges
+```
+
+- **Nothing but React**, and no images: the whole landscape is an authored
+  fragment shader.
+- **Draws only while something moves**: the paint-in, drifting mist, or the
+  pointer settling. Offscreen, in a hidden tab, or with `drift` and `parallax`
+  at 0 it draws nothing. Measured on an M1 Pro at 120 Hz with drifting mist:
+  0.3% dropped frames at pixel ratio 1, 0.8% at 2, after skipping all work above
+  each ridge line.
+- **Themes itself**: paper is the nearest background, ink is the text color,
+  and on dark paper the ink eases off so the range reads as moonlight.
+- **Reduced motion** shows the finished range as one still frame; no WebGL2
+  shows a soft gradient.
+
+Single file: [`src/components/ui/ink-ridges.tsx`](src/components/ui/ink-ridges.tsx).
+Demo: [`src/demos/ink-ridges/default.tsx`](src/demos/ink-ridges/default.tsx).
+
+| Prop | Default | What it does |
+|---|---|---|
+| `layers` | `4` | Ridges, 1–5 |
+| `seed` | `7` | Each number paints a different range |
+| `horizon` | `0.62` | Height of the farthest ridge |
+| `mist` | `0.6` | How much mist lifts out of each foot |
+| `drift` | `0.05` | Mist drift speed; 0 holds it still |
+| `parallax` | `0.03` | Pointer parallax; 0 turns it off |
+| `paintIn` | `2400` | Brush-in time in ms; 0 shows it painted |
+| `sun`, `sunPosition`, `sunSize`, `sunColor` | on, `[0.78, 0.74]`, `0.07`, ink | A disc behind the far ridge |
+| `inkColor` | text color | Ink color |
+| `grain` | `0.3` | Paper grain |
+| `label` | — | Accessible description; without it the canvas is decoration |
+| `children` | — | Content laid over the landscape |
+
 ## EaseAtlas
 
 A grid of 24 named easing curves. Each cell draws the curve as an SVG glyph and
@@ -230,8 +273,7 @@ always share the same stops.
 2. **EaseAtlas**: built, published by link only (review came back "needs changes";
    not pursued).
 3. **InkReveal**: built.
-4. **InkRidges** (proposed in place of ScrollScore): the procedural ink-ridge
-   field from InkHero's no-image mode as a standalone background.
+4. **InkRidges**: built (replaces ScrollScore, which stays an internal helper).
 5. **MaskReveal**: the line-mask headline reveal as its own component.
 
 ## Non-negotiables
