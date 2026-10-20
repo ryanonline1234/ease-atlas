@@ -1,57 +1,46 @@
 # State — ease-atlas
 
-_Updated: 2026-10-13_
+_Updated: 2026-10-19_
 
 ## Now
 
-- **InkHero is Featured** on 21st.dev (component 20923, public, featured).
-  https://21st.dev/@ryanonline1234/components/ink-hero
-- **EaseAtlas** (20924) came back `needs_changes`; Ryan chose not to pursue it. Unlisted.
-- Studio, last 30 days on 2026-10-13: 1,503 views, 6 copies, 12 bookmarks, 3 profile
-  views, 0 clicks out, 0 CLI installs, weekly rank 551 of 1,004 authors
-  (`metrics/2026-10-13-studio.png`). Page payload: `metrics/2026-10-13.json`.
-- **Revision drafted, not published:** draft 48e12df1-8efe-486f-b72a-b50e2d67e20c fixes
-  the Next.js build (`'use client'`), the Vite build (no parameter properties), black
-  paper without shadcn tokens, and the silent blank on CORS-less images; adds the
-  no-image mode and a search-led description. Publish only on Ryan's go:
-  `21st publish ./src/components/ui/ink-hero.tsx --component component:20923 --demo ./src/demos/ink-hero/default.tsx --draft draft:48e12df1-8efe-486f-b72a-b50e2d67e20c --auto --json`,
-  then confirm `21st components --json` still shows `featured`; if not, `21st resubmit ink-hero`.
-- Verified on 2026-10-13: 45 unit tests, typecheck with `erasableSyntaxOnly`, probe 7/7
-  (CORS fallback against a real no-CORS origin, no-image mode, rail, pointer), spec 72/76,
-  fresh Next.js 16 + shadcn and Vite 8 + plain Tailwind v4 projects build and render the
-  dissolve with a clean console.
-- Playground: https://ease-atlas.vercel.app. The Vercel project is git-connected: a push
-  to main deploys production.
-- Gates: K2 1 of 5 (needs two of InkReveal, MaskReveal, ScrollScore). K3 and K4 start at
-  the third Featured.
+- **InkHero** (20923): Featured on 21st.dev. Install-fix revision built and verified in the
+  repo (2026-10-13), not yet on the registry. The planned publish date was today.
+- **EaseAtlas** (20924): `needs_changes`, not pursued. Published by link only.
+- **InkReveal**: built and verified 2026-10-19, not on the registry.
+  `src/components/ui/ink-reveal.tsx`, demo `src/demos/ink-reveal/default.tsx`, playground
+  `?demo=ink-reveal`. React only; one WebGL context for every card; hover, inView, manual.
+  Verified: 59 unit tests, typecheck with `erasableSyntaxOnly`, probe 9/9 (one context for four
+  cards, hover develop and recede, inView, manual, touch → inView, rest ghost not blank,
+  reduced motion with zero contexts, real no-CORS origin), positive controls on the
+  shared-context and hover tests, fresh Next.js 16 + shadcn and Vite 8 + plain Tailwind v4
+  projects build and run with no added packages (one context, hover, keyboard focus).
+  Hero and atlas probes rerun green.
+- **Registry login expired** (HTTP 401). Ryan runs `21st login` before anything below.
+- Playground: https://ease-atlas.vercel.app (git-connected: a push to main deploys).
 
-## Next
+## Next (Ryan's decisions, each with a rec)
 
-1. **Revision publish: weighed 2026-10-13, rec = wait until Mon 2026-10-19.** Publishing a
-   revision sends Ink Hero back into review (Ryan confirmed), which takes it out of the catalog
-   for the review window (the first review took about 3 days) during the newness spike and the
-   Week 42 list. The fixes help a few code-copiers a week. Trigger to publish sooner: anyone
-   reports the Next.js build error. If the draft has expired by then, re-run the `--prepare`
-   command from DECISIONS (2026-10-13). Also: Ryan sets his 21st.dev profile's website and GitHub
-   links; "Clicks out to you" counts those, and they are empty.
-2. **Monthly capture on the 1st** (first 2026-11-01): `node scripts/capture-metrics.mjs`,
-   a Studio screenshot into `metrics/`, any contact into `metrics/inbound.md`.
-3. **InkReveal next:** the dissolve as a standalone media reveal with a `progress` prop
-   (hover, scroll, or controlled), then MaskReveal and ScrollScore. K2 needs two of three.
-4. From 2026-10-19: a week without Terra's ten logged hours is a week ease-atlas pauses.
+1. Run `21st login`.
+2. Publish InkReveal and submit it for featuring. Rec: yes. Commands:
+   `21st publish ./src/components/ui/ink-reveal.tsx --demo ./src/demos/ink-reveal/default.tsx --description "<see DECISIONS 2026-10-19>" --tags image,hover,webgl,card,animation --preview ./.21st-review/ink-reveal-cover.jpg --prepare --no-open --json`,
+   review, then `--draft draft:<id> --auto --json`, then `21st submit ink-reveal`.
+3. Publish the InkHero revision (today was the planned date). Rec: yes. The old draft
+   48e12df1 may have expired; re-run the `--prepare` command from DECISIONS 2026-10-13, then
+   `--auto`, then confirm status and `21st resubmit ink-hero` if it dropped to review.
+4. Swap ScrollScore for InkRidges as the fourth component. Rec: yes (visual, distinctive,
+   mostly written already in the hero's no-image mode).
+5. Monthly metrics capture on 2026-11-01: `node scripts/capture-metrics.mjs` + Studio screenshot.
+6. Pause rule starts this week: a week without Terra's ten logged hours pauses ease-atlas.
 
 ## Gotchas
 
 - The 21st.dev CDN sends CORS headers only to requests with an Origin and caches the plain
-  response without `Vary`. Never request the same image URL in two modes on one page.
+  response without `Vary`. Never request one image URL in two modes on a page.
 - Playwright `route.fulfill` bypasses CORS; test a bad image host with a real second origin.
 - Self-installs count. Test installs file-level in a scratch project, not with `21st add`.
-
-- Registry auto-cover capture refuses demos that link off-origin (`?demo=` links). Keep the
-  registry demos self-contained; supply covers with `--preview` when in doubt.
-- Wikimedia serves `1920px-` and `1280px-` thumbs for the demo image; `1600px-` is a 400.
-- The harness's Chromium runs on SwiftShader; `jank` uses the real GPU. `[SHADER_ERROR] null`
-  means a lost context, not GLSL.
+- `every()` on an empty list is true: readiness checks must assert the expected count first.
+- Long probe runs fail across a lid-closed sleep; check `pmset -g log` before debugging.
+- Registry auto-cover capture refuses demos that link off-origin; supply covers with `--preview`.
+- Wikimedia serves `960px-`, `1280px-`, `1920px-` thumbs; `1600px-` is a 400.
 - Tailwind with the Vite root at `playground/` needs `@source "../src";`.
-- The atlas probe divides by `getBoundingClientRect()` sizes and counts only `data-ride`
-  animations.

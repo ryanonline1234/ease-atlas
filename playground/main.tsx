@@ -5,14 +5,20 @@ import './styles.css'
 const demos = {
   'ease-atlas': lazy(() => import('../src/demos/ease-atlas/default')),
   'ink-hero': lazy(() => import('../src/demos/ink-hero/default')),
+  'ink-reveal': lazy(() => import('../src/demos/ink-reveal/default')),
 } as const
 type DemoName = keyof typeof demos
 
 const params = new URLSearchParams(location.search)
 const name = (params.get('demo') ?? 'ink-hero') as DemoName
 const Demo = demos[name] ?? demos['ink-hero']
-// probe hook: ?imageSrc=<url> (empty for the no-image mode) overrides the demo's image
-const demoProps: Record<string, string> = params.has('imageSrc') ? { imageSrc: params.get('imageSrc') ?? '' } : {}
+// probe hook: every query param except demo/dark becomes a demo prop (numbers and booleans
+// coerced), e.g. ?imageSrc= for the hero's no-image mode or ?trigger=manual&progress=0.4
+const coerce = (v: string): string | number | boolean =>
+  v === 'true' ? true : v === 'false' ? false : /^-?\d+(\.\d+)?$/.test(v) ? Number(v) : v
+const demoProps: Record<string, string | number | boolean> = Object.fromEntries(
+  [...params.entries()].filter(([k]) => k !== 'demo' && k !== 'dark').map(([k, v]) => [k, coerce(v)]),
+)
 
 function Shell() {
   return (

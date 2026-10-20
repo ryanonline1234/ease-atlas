@@ -81,6 +81,51 @@ that scroll to each station, and the front is tuned to read as ink, not fog:
 fine islands, a speckled edge, and a thin dark rim where the ink pools as it
 dries.
 
+## InkReveal
+
+An image that develops like ink soaking into paper. At rest the card holds a
+faint wash of the image; on hover the ink blooms from where the pointer came in,
+islands spreading with a tide line in the image's own tone, and it recedes when
+the pointer leaves. It can also develop when scrolled into view, or follow a
+progress value you drive.
+
+```bash
+npx @21st-dev/cli add @ryanonline1234/ink-reveal
+```
+
+- **Nothing but React.** No animation library; a 30-line tween drives it.
+- **One WebGL context for the whole page.** Every card draws through a single
+  shared WebGL2 surface and copies its frame into its own 2D canvas, so a
+  gallery of 30 cards uses one context, not 30. Browsers start dropping
+  contexts after about 16. Frames are drawn only while something changes.
+- **Accessible.** The real `<img>` stays in the DOM with its alt text; keyboard
+  focus on a wrapping link develops the card like hover; devices that cannot
+  hover develop it on scroll; `prefers-reduced-motion` shows the plain image
+  and creates no WebGL context.
+- **Fails visibly, never blank.** An image host without CORS headers gets the
+  plain image and one console warning; no WebGL2 gets the plain image.
+
+Single file: [`src/components/ui/ink-reveal.tsx`](src/components/ui/ink-reveal.tsx).
+Demo: [`src/demos/ink-reveal/default.tsx`](src/demos/ink-reveal/default.tsx),
+four public-domain ink paintings by Hasegawa Tōhaku and Sesshū Tōyō.
+
+| Prop | Default | What it does |
+|---|---|---|
+| `src`, `alt` | — | The image; a cross-origin `src` needs CORS headers for the effect |
+| `trigger` | `'hover'` | `'hover'`, `'inView'`, or `'manual'` |
+| `progress` | `0` | 0–1, followed exactly when `trigger` is `'manual'` |
+| `origin` | per trigger | `'pointer'` (hover), `'bottom'` (inView), `'center'` (manual), or `'top'`, `'left'`, `'right'` |
+| `ease` | `'ink'` | Any atlas curve name, a `cubic-bezier()` string, or `'linear'` |
+| `duration` | `900` | Develop time in ms; receding takes 70% of it |
+| `rest` | `0.2` | How much of the image shows at rest, 0 to 1 |
+| `feather` | `0.14` | Edge softness: lower is grittier ink, higher is fog |
+| `grain` | `0.3` | Paper grain |
+| `noiseScale` | `5` | Island size: larger is finer |
+| `inkColor` | text color | Color of the ink at the front |
+| `once` | `true` | inView: stay developed, or recede when scrolled away |
+| `aspectRatio` | `'4 / 5'` | The card's CSS aspect ratio |
+| `children` | — | Overlay content laid over the image |
+
 ## EaseAtlas
 
 A grid of 24 named easing curves. Each cell draws the curve as an SVG glyph and
@@ -174,15 +219,13 @@ always share the same stops.
 
 ## The set
 
-1. **InkHero** — built. The signature piece.
-2. **EaseAtlas** — built. The instrument; its curves retime the hero.
-3. **InkReveal** — next: the dissolve as a standalone media reveal with a `progress` prop.
-4. **MaskReveal** — the line-mask text reveal as its own component.
-5. **ScrollScore** — the station timeline helper: windows in, quick setters out.
-
-One stack for all five: React 19, TypeScript, Tailwind v4 semantic tokens,
-GSAP ScrollTrigger where scroll is involved. One easing vocabulary. One
-`data-*` API.
+1. **InkHero**: built, Featured on 21st.dev.
+2. **EaseAtlas**: built, published by link only (review came back "needs changes";
+   not pursued).
+3. **InkReveal**: built.
+4. **InkRidges** (proposed in place of ScrollScore): the procedural ink-ridge
+   field from InkHero's no-image mode as a standalone background.
+5. **MaskReveal**: the line-mask headline reveal as its own component.
 
 ## Non-negotiables
 

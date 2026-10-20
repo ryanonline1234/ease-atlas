@@ -259,3 +259,48 @@ advice: putting Next.js and Vite notes in the description (280-character limit;
 they live in the file header and README instead); moving the demo image (the
 registry already mirrors it to its CDN); fixing the metrics parser (it was
 correct; a fresh page simply had no counts).
+
+## 2026-10-19 — InkReveal: zero dependencies, one shared WebGL context
+Ryan: "Go ahead with ink reveal." The dissolve as a standalone image card that
+develops on hover (blooming from the pointer's entry point), on scroll into
+view, or from a controlled `progress`. Design choices:
+- React only. A 30-line rAF tween replaces GSAP; fewer dependencies, fewer
+  failed installs. A unit test pins the import list to `react`.
+- One WebGL2 context for every card on the page: a detached shared canvas
+  renders each card into its top-left W×H and the card copies that rectangle
+  into its own 2D canvas. Chrome drops the oldest context past about 16, and a
+  gallery is the main use case. Positive control: per-card contexts measured 8
+  contexts for 4 cards under React's dev double-mount; the shared surface, 1.
+- At rest the card holds a faint desaturated ghost (`rest` 0.2), not a blank.
+- Devices that cannot hover get the inView behaviour; keyboard focus on a
+  wrapping link or button develops the card; reduced motion shows the plain
+  image and creates no context; a CORS-less host falls back to the plain image
+  with the request-mode rule from InkHero.
+Rejected: one fixed full-page canvas drawing every card at its DOM rect (scroll
+sync and stacking problems); an SVG feTurbulence filter (recomputes noise on
+the CPU every frame); per-card contexts.
+
+## 2026-10-19 — InkReveal look: ink, not a burn hole
+The first front was one central blob with a heavy black rim, which read as a
+cigarette burn. Now the field leans less on the seed (0.4 instead of 0.55) so
+islands appear across the card, the tide line carries the image's own tone
+into the ink (band 0.42), the rim darkens by 0.22 instead of 0.4, and islands
+are finer (noiseScale 5).
+
+## 2026-10-19 — Harness lessons from this build
+- `every()` over an empty list is true. Two capture waits passed before the
+  lazily loaded demo mounted and saved blank frames; every readiness check now
+  requires all four cards to exist.
+- A 42-minute "timeout" was the Mac asleep with the lid closed (power log,
+  17:30–17:58). Check the power log before suspecting code.
+- Vite reloads the page when it discovers a dependency mid-session, which a
+  probe sees as the component vanishing. `optimizeDeps.include` now pins every
+  runtime dependency.
+- A hover sampling loop that stops within 0.001 of the target cannot then
+  assert within 0.0005; it now waits for the exact landing.
+
+## 2026-10-19 — Registry login expired
+`21st components` returns HTTP 401 "Invalid API key" for the saved login. Ryan
+re-runs `21st login`. Until then no draft, publish, or submit is possible; the
+InkReveal cover (`.21st-review/ink-reveal-cover.jpg`, four develop stages
+composited) and description are ready.
