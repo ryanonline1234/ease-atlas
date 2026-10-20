@@ -533,3 +533,14 @@ uploaded video; it was re-uploaded through the Edit dialog. Ink Reveal's panel
 ("Edited") was reset to the detected panel on Ryan's yes; its public preview
 now has the Paired toggle. Rule: demo settings objects hold plain literals
 only; casts go in the JSX.
+
+## 2026-10-20 — InkReveal and InkRidges Featured: K2 passes (3 of 5)
+`21st components --json` on 2026-10-20: ink-reveal (22319) and ink-ridges
+(22423) are `public`, `featured`, joining ink-hero (20923). Ease Atlas stays
+`needs_changes`. K2 needs ≥3 of 5 Featured, so it passes, with MaskReveal
+still unbuilt. The third Featured lands on 2026-10-20, which starts the clocks:
+K3 (adoption: set-median bookmarks ≥60, set-total CLI installs ≥10; freeze below
+22 bookmarks or 5 installs) is measured on 2026-12-19, and K4 (outside signal) on
+2027-01-18. npm and a second set stay deferred until both pass (K6). A revision
+sends a Featured component back into review, so all three Featured components
+are now treated the way Ink Hero is (no revisions) pending Ryan's confirmation.

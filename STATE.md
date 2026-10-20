@@ -7,7 +7,7 @@ _Updated: 2026-10-20_
 - **InkHero** (20923): Featured on 21st.dev, frozen there by Ryan's rule (below). The install
   fixes from 2026-10-13 live in the repo and playground only; the README says so.
 - **EaseAtlas** (20924): `needs_changes`, not pursued. Published by link only.
-- **InkReveal** (22319): published 2026-10-20 at a 1200 ms develop, `in_review`. Brushed up the
+- **InkReveal** (22319): FEATURED 2026-10-20 (published at a 1200 ms develop). Brushed up the
   same day on Ryan's go (fiber-wicking edge, crisp dark-paper edge) with two add-ons: `restSrc`
   (a second image at rest) and `trigger: 'scroll'`. Registry revision published 2026-10-20 (draft ca94b9e1, same
   component id, still `in_review`); the live preview develops on hover from 21st's CDN copies of
@@ -15,7 +15,7 @@ _Updated: 2026-10-20_
   Demo video UPLOADED 2026-10-20 through the component page's Edit dialog (18 s, 4:3, hover tour then
   paired prints; `docs/media/ink-reveal-demo.mp4`). Controls reset to the detected panel on Ryan's
   yes: the public preview now has the Paired toggle.
-- **InkRidges** (22423): PUBLISHED 2026-10-20 on Ryan's go and submitted, `in_review`.
+- **InkRidges** (22423): FEATURED 2026-10-20 (published on Ryan's go the same day).
   https://21st.dev/@ryanonline1234/components/ink-ridges. Supplied 4:3 cover; demo video uploaded
   through the Edit dialog (16 s, `docs/media/ink-ridges-demo.mp4`). Live preview checked in both
   themes (painted sun on light paper, moon on dark). Revised the same night so the listing has
@@ -25,6 +25,11 @@ _Updated: 2026-10-20_
   hovers to 1; scroll card 0.20 → 0.89 over 500 px; clean console); real-GPU timing in DECISIONS.
 - InkHero revision draft `48e12df1-8efe-486f-b72a-b50e2d67e20c` stays active and untouched.
 - Playground: https://ease-atlas.vercel.app (git-connected: a push to main deploys).
+
+## Gates
+K2 PASSED 2026-10-20 (Ink Hero, Ink Reveal, Ink Ridges Featured: 3 of 5). Clocks from the third
+Featured: **K3 adoption on 2026-12-19** (set-median bookmarks ≥60, set-total CLI installs ≥10; freeze
+below 22 / 5), **K4 outside signal on 2027-01-18**. npm and a second set wait for both (K6).
 
 ## Next (Ryan's decisions, each with a rec)
 
