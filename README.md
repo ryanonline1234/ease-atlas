@@ -135,12 +135,14 @@ four public-domain ink paintings by Hasegawa Tōhaku and Sesshū Tōyō.
 
 ## InkRidges
 
-![InkRidges: a sumi-e mountain range brushes itself in, far ridge first, then repaints from a new seed](docs/ink-ridges.gif)
+![InkRidges: a sumi-e mountain range brushes itself in, far ridge first, a small flock crosses above a far ridge, then it repaints from a new seed](docs/ink-ridges.gif)
 
 A sumi-e mountain range painted in front of you. Layered ridges, far to near,
 are each laid down with a brush sweep; the ink thins toward every foot and mist
-drifts between them. Every seed paints a different range. Use it as a hero or
-section background: children render on top.
+drifts between them. Thin cloud streaks cross a sky that warms around the sun,
+and every so often a small flock flies across, following the line of a far
+ridge. Every seed paints a different range. Use it as a hero or section
+background: children render on top.
 
 ```bash
 npx @21st-dev/cli add @ryanonline1234/ink-ridges
@@ -148,15 +150,19 @@ npx @21st-dev/cli add @ryanonline1234/ink-ridges
 
 - **Nothing but React**, and no images: the whole landscape is an authored
   fragment shader.
-- **Draws only while something moves**: the paint-in, drifting mist, or the
-  pointer settling. Offscreen, in a hidden tab, or with `drift` and `parallax`
-  at 0 it draws nothing. Measured on an M1 Pro at 120 Hz with drifting mist:
-  0.3% dropped frames at pixel ratio 1, 0.8% at 2, after skipping all work above
-  each ridge line.
+- **Draws only while something moves**: the paint-in, drifting mist, a flock
+  crossing, or the pointer settling. Offscreen, in a hidden tab, or with
+  `drift`, `parallax` and `birds` at 0 it draws nothing; between flocks a timer
+  wakes it, not a running loop. Measured on an M1 Pro at 120 Hz with drifting
+  mist, clouds and a flock in the air: 0.42% dropped frames at pixel ratio 1,
+  0.21% at 2.
+- **The birds follow the drawn ridge**: the shader's ridge noise is ported to
+  JavaScript, and a browser test checks the two lines agree within 2% of the
+  height at five columns (a different seed misses by 4.5%).
 - **Themes itself**: paper is the nearest background, ink is the text color,
   and on dark paper the ink eases off so the range reads as moonlight.
-- **Reduced motion** shows the finished range as one still frame; no WebGL2
-  shows a soft gradient.
+- **Reduced motion** shows the finished range as one still frame with no
+  birds; no WebGL2 shows a soft gradient.
 
 Single file: [`src/components/ui/ink-ridges.tsx`](src/components/ui/ink-ridges.tsx).
 Demo: [`src/demos/ink-ridges/default.tsx`](src/demos/ink-ridges/default.tsx).
@@ -171,6 +177,10 @@ Demo: [`src/demos/ink-ridges/default.tsx`](src/demos/ink-ridges/default.tsx).
 | `parallax` | `0.03` | Pointer parallax; 0 turns it off |
 | `paintIn` | `2400` | Brush-in time in ms; 0 shows it painted |
 | `sun`, `sunPosition`, `sunSize`, `sunColor` | on, `[0.78, 0.74]`, `0.07`, ink | A disc behind the far ridge |
+| `glow` | `0.45` | Warm halo around the sun and haze along the horizon; 0 turns it off |
+| `clouds` | `0.35` | Thin drifting cloud streaks in the sky; 0 turns them off |
+| `birds` | `5` | Birds per flock, 0–8; 0 turns flocks off |
+| `birdsEvery` | `14` | Average seconds between flocks (each crossing takes 9–12 s) |
 | `inkColor` | text color | Ink color |
 | `grain` | `0.3` | Paper grain |
 | `label` | — | Accessible description; without it the canvas is decoration |

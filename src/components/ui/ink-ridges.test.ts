@@ -85,3 +85,72 @@ describe('inkScaleFor', () => {
     expect(inkScaleFor([0, 0, 0])).toBeCloseTo(0.62, 6)
   })
 })
+
+describe('JS port of the shader noise', () => {
+  it('hash2 is deterministic and in [0, 1]', async () => {
+    const { hash2 } = await import('./ink-ridges')
+    expect(hash2(1.5, 2.5)).toBe(hash2(1.9, 2.1)) // same integer cell
+    for (const [x, y] of [[0, 0], [12.3, -4.2], [-7, 99]] as const) {
+      const v = hash2(x, y)
+      expect(v).toBeGreaterThanOrEqual(0)
+      expect(v).toBeLessThanOrEqual(1)
+    }
+  })
+  it('fbm stays in [0, 1] and is continuous', async () => {
+    const { fbm } = await import('./ink-ridges')
+    let prev = fbm(0, 0.3)
+    for (let k = 1; k <= 400; k++) {
+      const v = fbm(k * 0.005, 0.3)
+      expect(v).toBeGreaterThanOrEqual(0)
+      expect(v).toBeLessThanOrEqual(1)
+      expect(Math.abs(v - prev)).toBeLessThan(0.05)
+      prev = v
+    }
+  })
+})
+
+describe('ridgeLineAt', () => {
+  it('sits around its layer base and moves with the seed', async () => {
+    const { ridgeLineAt, layerAt } = await import('./ink-ridges')
+    const opt = { n: 4, horizon: 0.62, seed: 7, aspect: 16 / 9, shift: [0, 0] as [number, number] }
+    for (let i = 0; i < 4; i++) {
+      const L = layerAt(i, 4, 0.62)
+      for (let k = 0; k <= 20; k++) {
+        const y = ridgeLineAt(i, k / 20, opt)
+        expect(y).toBeGreaterThan(L.base - L.amp * 1.4)
+        expect(y).toBeLessThan(L.base + L.amp * 1.4)
+      }
+    }
+    expect(ridgeLineAt(1, 0.5, opt)).not.toBeCloseTo(ridgeLineAt(1, 0.5, { ...opt, seed: 8 }), 4)
+  })
+})
+
+describe('birdsAt (the flock)', () => {
+  it('crosses the frame, fades in and out, and flies above the ridge it follows', async () => {
+    const { birdsAt, ridgeLineAt } = await import('./ink-ridges')
+    const opt = { n: 4, horizon: 0.62, seed: 7, aspect: 16 / 9, shift: [0, 0] as [number, number] }
+    const flight = { start: 0, duration: 10, dir: 1 as const, count: 5, layer: 1, seed: 3 }
+    const first = birdsAt(flight, 0.2, opt)
+    const mid = birdsAt(flight, 5, opt)
+    const last = birdsAt(flight, 9.8, opt)
+    expect(first.alpha).toBeLessThan(0.3)
+    expect(mid.alpha).toBeCloseTo(1, 6)
+    expect(last.alpha).toBeLessThan(0.3)
+    expect(mid.birds).toHaveLength(5)
+    expect(mid.birds[0]!.x).toBeGreaterThan(first.birds[0]!.x)
+    expect(last.birds[0]!.x).toBeGreaterThan(1)
+    for (const b of mid.birds) {
+      expect(b.y).toBeGreaterThan(ridgeLineAt(1, b.x, opt) + 0.02)
+      expect(Math.abs(b.flap)).toBeLessThanOrEqual(0.6)
+    }
+  })
+  it('flies right to left when dir is -1, leader first', async () => {
+    const { birdsAt } = await import('./ink-ridges')
+    const opt = { n: 3, horizon: 0.6, seed: 1, aspect: 1.5, shift: [0, 0] as [number, number] }
+    const f = { start: 0, duration: 10, dir: -1 as const, count: 3, layer: 1, seed: 5 }
+    const a = birdsAt(f, 3, opt).birds
+    const b = birdsAt(f, 6, opt).birds
+    expect(b[0]!.x).toBeLessThan(a[0]!.x)
+    expect(a[1]!.x).toBeGreaterThan(a[0]!.x) // followers trail behind the leader
+  })
+})

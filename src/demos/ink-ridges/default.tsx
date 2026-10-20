@@ -14,6 +14,10 @@ const settings = {
   paintIn: 2600,
   sun: true,
   sunColor: '#b5402a',
+  glow: 0.45,
+  clouds: 0.35,
+  birds: 5,
+  birdsEvery: 14,
   grain: 0.3,
 }
 
@@ -33,6 +37,10 @@ export default function Demo(props: Partial<typeof settings>) {
         paintIn={s.paintIn}
         sun={s.sun}
         sunColor={s.sunColor}
+        glow={s.glow}
+        clouds={s.clouds}
+        birds={s.birds}
+        birdsEvery={s.birdsEvery}
         grain={s.grain}
         label="An ink landscape of layered mountain ridges in mist, painted by code"
         className="h-[82svh] min-h-[520px] w-full bg-background"
@@ -45,7 +53,7 @@ export default function Demo(props: Partial<typeof settings>) {
             painted in place.
           </h1>
           <p className="mt-5 max-w-sm text-sm text-muted-foreground">
-            Every seed paints a different range. Ink thins toward each foot and mist drifts between the ridges.
+            Every seed paints a different range. Ink thins toward each foot, mist drifts between the ridges, and now and then a flock crosses.
           </p>
           <button
             type="button"

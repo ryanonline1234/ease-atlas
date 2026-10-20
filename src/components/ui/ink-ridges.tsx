@@ -3,8 +3,10 @@
 /**
  * ink-ridges — a sumi-e mountain range painted in front of you. Layered ridges,
  * far to near, each laid down with a brush sweep; ink thins toward every foot
- * and mist drifts between them. Every seed paints a different range. Use it as
- * a hero or section background: children render on top.
+ * and mist drifts between them, under a washed sky with a glowing sun and a few
+ * brush-streak clouds. Every so often a small flock of birds crosses, gliding
+ * along a ridge. Every seed paints a different range. Use it as a hero or
+ * section background: children render on top.
  *
  * Install
  *   npx @21st-dev/cli add @ryanonline1234/ink-ridges   (needs a free 21st.dev API key)
@@ -13,8 +15,8 @@
  *   color, so it follows light and dark themes with no configuration.
  *
  * Frame budget
- *   It draws only while something moves: the paint-in, drifting mist, or the
- *   pointer settling. Offscreen, in a hidden tab, or with drift and parallax at
+ *   It draws only while something moves: the paint-in, drifting mist, a flock
+ *   in flight, or the pointer settling. Offscreen, in a hidden tab, or with drift and parallax at
  *   0 it draws nothing. prefers-reduced-motion shows the finished landscape as
  *   one static frame.
  *
@@ -73,6 +75,108 @@ export function paintAt(p: number, i: number, n: number): number {
 export function inkScaleFor(paper: [number, number, number]): number {
   const lum = 0.2126 * paper[0] + 0.7152 * paper[1] + 0.0722 * paper[2]
   return lum < 0.35 ? 0.62 + (lum / 0.35) * 0.38 : 1
+}
+
+/* The shader's noise, ported so the flock can follow a ridge line exactly. */
+
+function hashU(x: number, y: number): number {
+  let n = (Math.imul(x, 1664525) ^ (Math.imul(y, 22695477) + 12345)) >>> 0
+  n = (n ^ (n >>> 15)) >>> 0
+  n = Math.imul(n, 2246822519) >>> 0
+  n = (n ^ (n >>> 13)) >>> 0
+  n = Math.imul(n, 3266489917) >>> 0
+  n = (n ^ (n >>> 16)) >>> 0
+  return n
+}
+/** Mirrors the GLSL hash2: one value per integer cell, in [0, 1]. */
+export function hash2(x: number, y: number): number {
+  return hashU(Math.floor(x) + 32768, Math.floor(y) + 32768) / 4294967295
+}
+const mix = (a: number, b: number, t: number) => a + (b - a) * t
+export function vnoise(x: number, y: number): number {
+  const ix = Math.floor(x)
+  const iy = Math.floor(y)
+  const fx = x - ix
+  const fy = y - iy
+  const ux = fx * fx * (3 - 2 * fx)
+  const uy = fy * fy * (3 - 2 * fy)
+  return mix(mix(hash2(ix, iy), hash2(ix + 1, iy), ux), mix(hash2(ix, iy + 1), hash2(ix + 1, iy + 1), ux), uy)
+}
+/** Mirrors the GLSL fbm: five octaves, the same rotation and offsets. */
+export function fbm(x: number, y: number): number {
+  let v = 0
+  let a = 0.5
+  for (let i = 0; i < 5; i++) {
+    v += a * vnoise(x, y)
+    const nx = (0.8 * x - 0.6 * y) * 2.03 + 11.7
+    const ny = (0.6 * x + 0.8 * y) * 2.03 + 11.7
+    x = nx
+    y = ny
+    a *= 0.5
+  }
+  return v
+}
+
+export interface RidgeOpts {
+  n: number
+  horizon: number
+  seed: number
+  aspect: number
+  shift: [number, number]
+}
+
+/** Height (uv, bottom 0 to top 1) of ridge i's line at uv x, exactly as the shader draws it. */
+export function ridgeLineAt(i: number, uvx: number, o: RidgeOpts): number {
+  const L = layerAt(i, o.n, o.horizon)
+  const k = 0.25 + L.depth
+  const x = (uvx + o.shift[0] * k) * o.aspect
+  const n = fbm(x * L.freq + o.seed * 1.37 + i * 7.31, i * 3.7 + o.seed * 0.71)
+  const ridged = 1 - Math.abs(2 * vnoise(x * L.freq * 2.3 + i * 5.1 + o.seed, i + o.seed * 0.3) - 1)
+  const h = L.base + L.amp * ((n - 0.5) * 2 + (ridged - 0.5) * 0.35)
+  return h - o.shift[1] * k
+}
+
+export interface Flight {
+  /** ms timestamp the flight began (only used by the component). */
+  start: number
+  /** seconds to cross the frame */
+  duration: number
+  dir: 1 | -1
+  count: number
+  /** the ridge the flock follows */
+  layer: number
+  seed: number
+}
+export interface Bird {
+  x: number
+  y: number
+  /** half wingspan as a fraction of the frame height */
+  size: number
+  /** wingtip lift: positive up, negative down */
+  flap: number
+}
+
+/** The flock t seconds into a flight: a loose V that follows ridge `layer`, flapping and gliding. */
+export function birdsAt(f: Flight, t: number, o: RidgeOpts): { alpha: number; birds: Bird[] } {
+  const u = clamp01(t / f.duration)
+  const lead = f.dir > 0 ? -0.12 + 1.3 * u : 1.12 - 1.3 * u
+  const alpha = clamp01(Math.min(u / 0.08, (1 - u) / 0.08, 1))
+  const L = layerAt(f.layer, o.n, o.horizon)
+  const cruise = L.base + L.amp
+  const birds: Bird[] = []
+  for (let k = 0; k < f.count; k++) {
+    const rank = Math.ceil(k / 2)
+    const side = k === 0 ? 0 : k % 2 ? 1 : -1
+    const r = hash2(k * 3.1 + f.seed * 7.7, f.seed * 1.3 + k)
+    const x = lead - f.dir * rank * (0.028 + 0.008 * r)
+    const ridge = ridgeLineAt(f.layer, x, o)
+    const bob = 0.005 * Math.sin(t * 1.6 + k * 1.9)
+    const y = Math.max(ridge + 0.07, 0.5 * (cruise + ridge) + 0.08) + side * rank * 0.018 + bob
+    const glide = 0.5 + 0.5 * Math.sin(t * 0.8 + k * 2.3)
+    const flap = (0.15 + 0.4 * glide) * Math.sin(t * (8 + 2 * r) + k * 1.3)
+    birds.push({ x, y, size: 0.011 + 0.004 * r, flap })
+  }
+  return { alpha, birds }
 }
 
 /** Exponential smoothing that behaves the same at 60 Hz and 120 Hz. */
@@ -180,6 +284,14 @@ uniform vec3 uInk;
 uniform vec3 uSunColor;
 uniform vec4 uSun;
 uniform float uInkScale;
+uniform float uClouds;
+uniform float uGlow;
+uniform float uHorizonY;
+uniform int uBirdCount;
+uniform vec4 uBird[8];
+uniform float uBirdAlpha;
+uniform float uBirdDir;
+uniform int uBirdLayer;
 
 uint hashU(uvec2 p) {
   uint n = p.x * 1664525u ^ (p.y * 22695477u + 12345u);
@@ -222,15 +334,51 @@ float fbm3(vec2 p) {
   return v / 0.875 * 0.96875;
 }
 
+// A small brush-stroke bird: two wings rising from a dot, tips lifted or dropped by the flap.
+float birdInk(vec2 uv, float aspect) {
+  float ink = 0.0;
+  for (int b = 0; b < 8; b++) {
+    if (b >= uBirdCount) break;
+    vec4 B = uBird[b];
+    vec2 q = (uv - B.xy) * vec2(aspect, 1.0) / B.z;
+    if (abs(q.x) > 1.25 || abs(q.y) > 1.25) continue;
+    q.x *= uBirdDir;
+    float ax = abs(q.x);
+    float wingY = B.w * ax - 0.28 * ax * ax + 0.06;
+    float thick = 0.11 * (1.0 - ax) + 0.03;
+    float wing = (1.0 - smoothstep(thick, thick + 0.05, abs(q.y - wingY))) * (1.0 - smoothstep(0.95, 1.05, ax));
+    float body = 1.0 - smoothstep(0.08, 0.13, length(vec2(q.x * 0.8 - 0.05, q.y * 1.4)));
+    ink = max(ink, max(wing, body));
+  }
+  return ink * uBirdAlpha;
+}
+
 void main() {
   vec2 uv = vUv;
   float aspect = uResolution.x / uResolution.y;
   vec3 col = uPaper;
 
+  // sky: a faint wash deepening toward the top
+  col = mix(col, uInk, 0.05 * smoothstep(0.45, 1.0, uv.y) * uInkScale);
+  // warmth around the sun and a haze along the horizon
+  if (uSun.w > 0.5 && uGlow > 0.0) {
+    float ds = length((uv - uSun.xy) * vec2(aspect, 1.0));
+    float halo = exp(-pow(ds / (uSun.z * 3.2), 2.0));
+    float haze = exp(-pow((uv.y - uHorizonY) / 0.12, 2.0));
+    float fade = smoothstep(0.0, 0.4, uPaintAll);
+    col = mix(col, uSunColor, uGlow * (0.22 * halo + 0.06 * haze) * fade);
+  }
   if (uSun.w > 0.5) {
     float d = length((uv - uSun.xy) * vec2(aspect, 1.0));
     float disc = 1.0 - smoothstep(uSun.z - 0.004, uSun.z + 0.004, d);
     col = mix(col, uSunColor, disc * 0.85 * smoothstep(0.0, 0.3, uPaintAll));
+  }
+  // a few long brush-streak clouds, drifting with the mist
+  if (uClouds > 0.0) {
+    vec2 cq = vec2(uv.x * aspect * 0.8 + uTime * uDrift * 0.15 + uSeed * 0.53, uv.y * 11.0);
+    float streak = smoothstep(0.5, 0.8, fbm3(cq));
+    float inSky = smoothstep(uHorizonY - 0.02, uHorizonY + 0.2, uv.y) * (1.0 - smoothstep(0.92, 1.0, uv.y));
+    col = mix(col, uInk, uClouds * 0.26 * streak * inSky * uInkScale * smoothstep(0.0, 0.4, uPaintAll));
   }
 
   for (int i = 0; i < 5; i++) {
@@ -246,7 +394,7 @@ void main() {
 
     float bleed = 0.0025 + 0.004 * vnoise(vec2(x * 40.0, fi * 9.0));
     float below = smoothstep(h + bleed, h - bleed, p.y);
-    if (below <= 0.0) continue; // above this ridge line: no ink from it, skip the expensive part
+    if (below > 0.0) { // above this ridge line: no ink from it, skip the expensive part
     float fall = clamp((h - p.y) / (0.12 + 0.08 * depth), 0.0, 1.0);
     float tex = fbm3(vec2(x * 18.0, p.y * 22.0) + fi * 4.0 + uSeed);
     float dens = L.w * uInkScale * (1.0 - uMist * 0.95 * fall) * (0.82 + 0.36 * tex);
@@ -256,13 +404,16 @@ void main() {
     float edge = mix(-0.2, 1.2, uPaint[i]) + (fbm3(vec2(p.y * 14.0, fi * 3.0 + uSeed)) - 0.5) * 0.18;
     float painted = 1.0 - smoothstep(edge - 0.035, edge + 0.035, uv.x);
     col = mix(col, uInk, clamp(below * dens * painted, 0.0, 1.0));
+    }
+    // the flock flies in front of the ridge it follows and behind the nearer ones
+    if (i == uBirdLayer && uBirdCount > 0) col = mix(col, uInk, birdInk(uv, aspect) * 0.8 * uInkScale);
   }
 
   col += (hash2(uv * uResolution * 0.5) - 0.5) * uGrain * 0.1;
   fragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
 }`
 
-const UNIFORMS = ['uResolution', 'uTime', 'uSeed', 'uMist', 'uDrift', 'uGrain', 'uLayers', 'uLayer', 'uPaint', 'uPaintAll', 'uShift', 'uPaper', 'uInk', 'uSunColor', 'uSun', 'uInkScale'] as const
+const UNIFORMS = ['uResolution', 'uTime', 'uSeed', 'uMist', 'uDrift', 'uGrain', 'uLayers', 'uLayer', 'uPaint', 'uPaintAll', 'uShift', 'uPaper', 'uInk', 'uSunColor', 'uSun', 'uInkScale', 'uClouds', 'uGlow', 'uHorizonY', 'uBirdCount', 'uBird', 'uBirdAlpha', 'uBirdDir', 'uBirdLayer'] as const
 
 interface Frame {
   time: number
@@ -280,6 +431,13 @@ interface Frame {
   sun: [number, number, number, number]
   /** Overall ink density: lighter ink on dark paper reads as moonlight, not glare. */
   inkScale: number
+  clouds: number
+  glow: number
+  horizonY: number
+  birds: Bird[]
+  birdAlpha: number
+  birdDir: number
+  birdLayer: number
 }
 
 /** One quad, one program, no textures; renders on demand. */
@@ -384,6 +542,16 @@ class RidgesGL {
     gl.uniform3f(L('uSunColor'), ...f.sunColor)
     gl.uniform4f(L('uSun'), ...f.sun)
     gl.uniform1f(L('uInkScale'), f.inkScale)
+    gl.uniform1f(L('uClouds'), f.clouds)
+    gl.uniform1f(L('uGlow'), f.glow)
+    gl.uniform1f(L('uHorizonY'), f.horizonY)
+    const birdData = new Float32Array(8 * 4)
+    f.birds.slice(0, 8).forEach((b, i) => birdData.set([b.x, b.y, b.size, b.flap], i * 4))
+    gl.uniform1i(L('uBirdCount'), Math.min(8, f.birds.length))
+    gl.uniform4fv(L('uBird'), birdData)
+    gl.uniform1f(L('uBirdAlpha'), f.birdAlpha)
+    gl.uniform1f(L('uBirdDir'), f.birdDir)
+    gl.uniform1i(L('uBirdLayer'), f.birdLayer)
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
   }
 
@@ -428,6 +596,14 @@ export interface InkRidgesProps {
   inkColor?: string
   /** Paper grain, 0–1. */
   grain?: number
+  /** Brush-streak clouds in the sky, 0–1. */
+  clouds?: number
+  /** Warm halo around the sun and haze along the horizon, 0–1 (needs the sun). */
+  glow?: number
+  /** Birds in each passing flock, 0–8; 0 means none. */
+  birds?: number
+  /** Average seconds between flocks (each gap varies ±40%). */
+  birdsEvery?: number
   /** Device-pixel-ratio cap for the canvas. */
   dprCap?: number
   /** An accessible description; without it the landscape is treated as decoration. */
@@ -451,6 +627,10 @@ export default function InkRidges({
   sunColor,
   inkColor,
   grain = 0.3,
+  clouds = 0.35,
+  glow = 0.45,
+  birds = 5,
+  birdsEvery = 14,
   dprCap = 1.5,
   label,
   className,
@@ -459,8 +639,8 @@ export default function InkRidges({
   const rootRef = React.useRef<HTMLDivElement>(null)
   const canvasRef = React.useRef<HTMLCanvasElement>(null)
   const [glOk, setGlOk] = React.useState(true)
-  const opts = React.useRef({ layers, horizon, mist, drift, parallax, paintIn, sun, sunPosition, sunSize, sunColor, inkColor, grain, seed })
-  opts.current = { layers, horizon, mist, drift, parallax, paintIn, sun, sunPosition, sunSize, sunColor, inkColor, grain, seed }
+  const opts = React.useRef({ layers, horizon, mist, drift, parallax, paintIn, sun, sunPosition, sunSize, sunColor, inkColor, grain, seed, clouds, glow, birds, birdsEvery })
+  opts.current = { layers, horizon, mist, drift, parallax, paintIn, sun, sunPosition, sunSize, sunColor, inkColor, grain, seed, clouds, glow, birds, birdsEvery }
   const ctl = React.useRef({ kick: () => {}, repaint: () => {}, retheme: () => {} })
 
   React.useEffect(() => {
@@ -474,6 +654,19 @@ export default function InkRidges({
     let visible = true
     let paintStart = performance.now()
     const ptr = { x: 0, y: 0, tx: 0, ty: 0 }
+    let flight: Flight | null = null
+    let nextFlightAt = Infinity
+    let flightTimer: ReturnType<typeof setTimeout> | undefined
+    const scheduleFlight = (from: number, first: boolean) => {
+      const o = opts.current
+      if (o.birds <= 0 || reducedMq.matches) {
+        nextFlightAt = Infinity
+        return
+      }
+      const every = Math.max(1, o.birdsEvery) * 1000
+      nextFlightAt = from + (first ? Math.min(every, Math.max(0, o.paintIn) + 1500) : every * (0.6 + 0.8 * Math.random()))
+    }
+    scheduleFlight(paintStart, true)
     let paper: RGB = [1, 1, 1]
     let inkRgb: RGB = [0.1, 0.1, 0.1]
     let sunRgb: RGB = [0.1, 0.1, 0.1]
@@ -512,6 +705,24 @@ export default function InkRidges({
       }
       const n = Math.max(1, Math.min(MAX_LAYERS, Math.round(o.layers)))
       const ridges = Array.from({ length: n }, (_, i) => layerAt(i, n, o.horizon))
+      const aspect = canvas!.width / Math.max(1, canvas!.height)
+      const ridgeOpts: RidgeOpts = { n, horizon: o.horizon, seed: o.seed, aspect, shift: [ptr.x, ptr.y] }
+      // a flock: start one when it is due (never while hidden, painting or under reduced motion), end it when it has crossed
+      if (!flight && !reduced && visible && p >= 1 && o.birds > 0 && now >= nextFlightAt) {
+        flight = { start: now, duration: 9 + Math.random() * 3, dir: Math.random() < 0.5 ? 1 : -1, count: Math.min(8, Math.round(o.birds)), layer: n >= 3 ? 1 : 0, seed: Math.floor(Math.random() * 1000) }
+      }
+      let flock: { alpha: number; birds: Bird[] } = { alpha: 0, birds: [] }
+      let flightU = 0
+      if (flight) {
+        const t = (now - flight.start) / 1000
+        if (t >= flight.duration || reduced || o.birds <= 0) {
+          flight = null
+          scheduleFlight(now, false)
+        } else {
+          flock = birdsAt(flight, t, ridgeOpts)
+          flightU = t / flight.duration
+        }
+      }
       gl.draw({
         time,
         seed: o.seed,
@@ -527,12 +738,27 @@ export default function InkRidges({
         sunColor: sunRgb,
         sun: [o.sunPosition[0], o.sunPosition[1], o.sunSize, o.sun ? 1 : 0],
         inkScale: inkScaleFor(paper),
+        clouds: clamp01(o.clouds),
+        glow: clamp01(o.glow),
+        horizonY: layerAt(0, n, o.horizon).base,
+        birds: flock.birds,
+        birdAlpha: flock.alpha,
+        birdDir: flight?.dir ?? 1,
+        birdLayer: flight ? flight.layer : -1,
       })
       root!.style.setProperty('--ink-ridges-paint', String(p))
+      root!.style.setProperty('--ink-ridges-flight', String(flightU))
       const settling = Math.abs(ptr.x - ptr.tx) > 1e-4 || Math.abs(ptr.y - ptr.ty) > 1e-4
-      const moving = p < 1 || o.drift > 0 || settling
+      const moving = p < 1 || o.drift > 0 || settling || !!flight
+      clearTimeout(flightTimer)
       if (!reduced && visible && !document.hidden && moving) raf = requestAnimationFrame(frame)
-      else last = 0 // the next start takes no time jump
+      else {
+        last = 0 // the next start takes no time jump
+        // idle between flocks: wake once, when the next one is due
+        if (!reduced && visible && !document.hidden && Number.isFinite(nextFlightAt)) {
+          flightTimer = setTimeout(kick, Math.max(0, nextFlightAt - performance.now()) + 16)
+        }
+      }
     }
 
     const resize = new ResizeObserver(([entry]) => {
@@ -582,6 +808,8 @@ export default function InkRidges({
       kick,
       repaint: () => {
         paintStart = performance.now()
+        flight = null
+        scheduleFlight(paintStart, true)
         kick()
       },
       retheme: onTheme,
@@ -591,6 +819,7 @@ export default function InkRidges({
     return () => {
       if (raf) cancelAnimationFrame(raf)
       raf = 0
+      clearTimeout(flightTimer)
       ctl.current = { kick: () => {}, repaint: () => {}, retheme: () => {} }
       resize.disconnect()
       io.disconnect()
@@ -617,7 +846,7 @@ export default function InkRidges({
   // any other change redraws once (and keeps drawing only if something now moves)
   React.useEffect(() => {
     ctl.current.kick()
-  }, [layers, horizon, mist, drift, parallax, sun, sunPosition, sunSize, grain])
+  }, [layers, horizon, mist, drift, parallax, sun, sunPosition, sunSize, grain, clouds, glow, birds, birdsEvery])
   React.useEffect(() => {
     ctl.current.retheme()
   }, [inkColor, sunColor])

@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { chromium, type Browser, type BrowserContextOptions, type Page } from 'playwright'
 import { createServer, type ViteDevServer } from 'vite'
+import { ridgeLineAt } from '@/components/ui/ink-ridges'
 
 const PORT = 5184
 const url = (q = '', dark = 0) => `http://localhost:${PORT}/?demo=ink-ridges&dark=${dark}${q}`
@@ -100,7 +101,7 @@ describe('ink ridges: render and paint-in', () => {
 
 describe('ink ridges: frame budget', () => {
   it('a still landscape draws nothing once painted', async () => {
-    const { page, close } = await open('&drift=0&paintIn=0')
+    const { page, close } = await open('&drift=0&paintIn=0&birds=0')
     await waitPainted(page)
     await page.waitForTimeout(300)
     const a = await draws(page)
@@ -138,7 +139,7 @@ describe('ink ridges: frame budget', () => {
 
 describe('ink ridges: interaction', () => {
   it('the pointer shifts the ridges (parallax), then they settle', async () => {
-    const { page, close } = await open('&drift=0&paintIn=0')
+    const { page, close } = await open('&drift=0&paintIn=0&birds=0')
     await waitPainted(page)
     await page.mouse.move(720, 450)
     await page.waitForTimeout(700)
@@ -154,7 +155,7 @@ describe('ink ridges: interaction', () => {
   })
 
   it('"Paint another range" repaints a different landscape', async () => {
-    const { page, close } = await open('&drift=0&paintIn=600')
+    const { page, close } = await open('&drift=0&paintIn=600&birds=0')
     await waitPainted(page)
     const first = await page.locator('[data-ink-ridges]').screenshot()
     await page.getByRole('button', { name: /paint another range/i }).click()
@@ -163,6 +164,55 @@ describe('ink ridges: interaction', () => {
     await waitPainted(page)
     const second = await page.locator('[data-ink-ridges]').screenshot()
     expect(Buffer.compare(first, second)).not.toBe(0)
+    await close()
+  })
+})
+
+
+describe('ink ridges: sky and birds', () => {
+  it('a flock crosses a still landscape, then it goes idle again', async () => {
+    const { page, close } = await open('&drift=0&paintIn=0&birdsEvery=1')
+    await waitPainted(page)
+    await page.waitForFunction(() => Number(getComputedStyle(document.querySelector('[data-ink-ridges]')!).getPropertyValue('--ink-ridges-flight')) > 0.2, null, { timeout: 15_000 })
+    const a = await draws(page)
+    const shotA = await page.locator('[data-ink-ridges]').screenshot()
+    await page.waitForTimeout(400)
+    expect((await draws(page)) - a).toBeGreaterThan(1)
+    const shotB = await page.locator('[data-ink-ridges]').screenshot()
+    expect(Buffer.compare(shotA, shotB)).not.toBe(0) // birds moved with nothing else moving
+    await page.waitForFunction(() => Number(getComputedStyle(document.querySelector('[data-ink-ridges]')!).getPropertyValue('--ink-ridges-flight')) === 0, null, { timeout: 20_000 })
+    await page.waitForTimeout(200)
+    const b = await draws(page)
+    await page.waitForTimeout(300)
+    expect((await draws(page)) - b).toBe(0)
+    await close()
+  }, 60_000)
+
+  it('the JavaScript ridge line the birds follow matches the drawn ridge line', async () => {
+    const { page, close } = await open('&drift=0&paintIn=0&birds=0&clouds=0&glow=0&sun=false&mist=0&parallax=0')
+    await waitPainted(page)
+    const box = (await page.locator('[data-ink-ridges]').boundingBox())!
+    const b64 = (await page.locator('[data-ink-ridges]').screenshot({ scale: 'css' })).toString('base64')
+    const xs = [0.5, 0.6, 0.7, 0.8, 0.92] // right of the headline block, so the first dark pixel is ink, not type
+    const measured: number[] = await page.evaluate(async ([s, cols]) => {
+      const bmp = await createImageBitmap(await (await fetch('data:image/png;base64,' + s)).blob())
+      const c = document.createElement('canvas'); c.width = bmp.width; c.height = bmp.height
+      const x = c.getContext('2d')!; x.drawImage(bmp, 0, 0)
+      const out: number[] = []
+      for (const fx of cols as number[]) {
+        const px = Math.round(fx * (bmp.width - 1))
+        const col = x.getImageData(px, 0, 1, bmp.height).data
+        const paper = (col[4 * 2]! + col[4 * 2 + 1]! + col[4 * 2 + 2]!) / 3
+        let y = -1
+        for (let r = 2; r < bmp.height; r++) { const l = (col[4 * r]! + col[4 * r + 1]! + col[4 * r + 2]!) / 3; if (l < paper - 18) { y = r; break } }
+        out.push(1 - y / bmp.height)
+      }
+      return out
+    }, [b64, xs] as const)
+    const opt = { n: 4, horizon: 0.62, seed: 7, aspect: box.width / box.height, shift: [0, 0] as [number, number] }
+    xs.forEach((fx, i) => {
+      expect(Math.abs(measured[i]! - ridgeLineAt(0, fx, opt)), `far ridge at x=${fx}`).toBeLessThan(0.02)
+    })
     await close()
   })
 })

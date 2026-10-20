@@ -388,3 +388,31 @@ alone, so no generated video is possible for it; the repo demo now spells every
 URL out for any future publish. The demo's import comment no longer matched the
 rewritten import in the registry copy; the repo comment now reads true in both.
 Neither warrants a revision while it is in review.
+
+## 2026-10-20 — InkRidges: a reworked sky and occasional flocks
+Ryan: "for ink ridges first change up the sky a little bit and maybe add small
+birds or animals that will move along the ridge every once in a while."
+- Sky: a faint ink wash darkening toward the top, a warm halo around the sun
+  plus haze along the horizon in the sun's color (`glow`, 0.45), and thin
+  drifting cloud streaks (`clouds`, 0.35). Both 0 restore the old flat sky.
+- Birds rather than walking animals: at this scale a walker on a ridge line is a
+  few pixels of ink and reads as a blemish; a small V of brush-stroke birds
+  reads instantly and suits sumi-e. A walker stays an option if Ryan wants one.
+- A flock (`birds`, default 5, at most 8) crosses every `birdsEvery` seconds on
+  average (14, jittered 0.6–1.4×), takes 9–12 s, fades in and out over the first
+  and last 8%, and flies above the second-farthest ridge (the farthest with
+  fewer than 3 layers), drawn inside that layer so nearer ridges pass in front.
+- The flock follows the drawn ridge, so the shader's hash, value noise and fbm
+  are ported to JavaScript (`ridgeLineAt`). A browser test reads the drawn ridge
+  at five columns and matches the JS line within 0.02 of the height; a
+  different seed misses by 0.045 (positive control).
+- Between flocks nothing runs: a timeout wakes the loop when the next flock is
+  due, and only if the component is visible, painted, and motion is allowed.
+  Reduced motion shows no birds.
+- Real GPU (M1 Pro, 120 Hz, 1440×900, mist drifting, a flock in the air): 0.42%
+  dropped at pixel ratio 1, 0.21% at 2, at most 2 long frames.
+- Cover: captured on the real GPU (headless SwiftShader took ~11 s a screenshot
+  and never caught a flock) at the moment five birds sit in open sky, 4:3.
+Rejected: birds as a DOM/SVG overlay (they would not sit behind nearer ridges
+and would need their own theming); a fixed schedule (a flock every N seconds
+exactly reads mechanical).
