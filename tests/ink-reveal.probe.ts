@@ -109,6 +109,36 @@ describe('ink reveal: triggers', () => {
     await close()
   })
 
+  it('scroll follows the page: develops as the card rises, reverses on the way back', async () => {
+    const { page, close } = await open('&trigger=scroll')
+    const expected = () =>
+      page.evaluate(() => {
+        const r = document.querySelector('[data-ink-reveal]')!.getBoundingClientRect()
+        return Math.min(1, Math.max(0, (innerHeight - r.top) / (innerHeight * 0.5 + r.height * 0.5)))
+      })
+    const settle = async () => {
+      let v = -1
+      for (let k = 0; k < 40; k++) {
+        await page.waitForTimeout(50)
+        const now = await reveal(page)
+        if (Math.abs(now - v) < 1e-9) break
+        v = now
+      }
+      return v
+    }
+    const top = await settle()
+    expect(Math.abs(top - (await expected()))).toBeLessThan(0.005)
+    await page.evaluate(() => window.scrollTo(0, 260))
+    const mid = await settle()
+    expect(mid).toBeGreaterThan(top + 0.2)
+    expect(Math.abs(mid - (await expected()))).toBeLessThan(0.005)
+    await page.evaluate(() => window.scrollTo(0, 2000))
+    expect(await settle()).toBe(1)
+    await page.evaluate(() => window.scrollTo(0, 0))
+    expect(Math.abs((await settle()) - top)).toBeLessThan(0.005)
+    await close()
+  })
+
   it('a device that cannot hover gets the inView behaviour', async () => {
     const { page, close } = await open('', { hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } })
     await page.waitForTimeout(1600)
@@ -140,6 +170,36 @@ describe('ink reveal: what the canvas shows', () => {
     expect(stats.full.range).toBeGreaterThan(stats.rest.range + 30)
     await b.close()
   })
+})
+
+describe('ink reveal: a second image at rest (restSrc)', () => {
+  const stats = (page: Page, b64: string) =>
+    page.evaluate(async (s) => {
+      const bmp = await createImageBitmap(await (await fetch('data:image/png;base64,' + s)).blob())
+      const c = document.createElement('canvas'); c.width = 48; c.height = 60
+      const x = c.getContext('2d')!; x.drawImage(bmp, 0, 0, 48, 60)
+      const d = x.getImageData(0, 0, 48, 60).data
+      let sum = 0
+      for (let i = 0; i < d.length; i += 4) sum += (d[i]! + d[i + 1]! + d[i + 2]!) / 3
+      return sum / (d.length / 4)
+    }, b64)
+  const shot = async (q: string) => {
+    const o = await open('&trigger=manual' + q)
+    await o.page.waitForTimeout(800) // the rest texture loads after the main one
+    const b64 = (await o.page.locator('[data-ink-reveal]').nth(3).screenshot()).toString('base64')
+    const mean = await stats(o.page, b64)
+    await o.close()
+    return mean
+  }
+  it('rests on the partner print, then develops to exactly the same image as without one', async () => {
+    // card 3 is the dark Sesshū winter landscape; its partner is the pale splashed-ink landscape
+    const washRest = await shot('&progress=0')
+    const pairRest = await shot('&progress=0&paired=true')
+    const washFull = await shot('&progress=1')
+    const pairFull = await shot('&progress=1&paired=true')
+    expect(Math.abs(pairRest - washRest)).toBeGreaterThan(20)
+    expect(Math.abs(pairFull - washFull)).toBeLessThan(2)
+  }, 60_000)
 })
 
 describe('ink reveal: fallbacks', () => {

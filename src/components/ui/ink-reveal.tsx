@@ -2,10 +2,11 @@
 
 /**
  * ink-reveal — an image that develops like ink soaking into paper. At rest the
- * card holds a faint wash of the image. On hover the ink blooms from where the
- * pointer came in, with a dark rim where it pools, and recedes when the pointer
- * leaves. It can also develop when scrolled into view, or follow a progress
- * value you control.
+ * card holds a faint wash of the image (or a second image, restSrc). On hover
+ * the ink blooms from where the pointer came in, wicking ahead along the paper's
+ * fibers with a dark rim where it pools, and recedes when the pointer leaves. It
+ * can also develop when scrolled into view, scrub with the scroll, or follow a
+ * progress value you control.
  *
  * Install
  *   npx @21st-dev/cli add @ryanonline1234/ink-reveal   (needs a free 21st.dev API key)
@@ -43,9 +44,10 @@ import * as React from 'react'
 /* ----------------------------- pure parts ------------------------------- */
 
 export type EaseFn = (t: number) => number
-export type Trigger = 'hover' | 'inView' | 'manual'
+export type Trigger = 'hover' | 'inView' | 'scroll' | 'manual'
 export type Origin = 'pointer' | 'center' | 'top' | 'bottom' | 'left' | 'right'
 type RGB = [number, number, number]
+const clamp01 = (t: number) => Math.min(1, Math.max(0, t))
 
 export function cubicBezier(x1: number, y1: number, x2: number, y2: number): EaseFn {
   const bx = (t: number) => 3 * (1 - t) * (1 - t) * t * x1 + 3 * (1 - t) * t * t * x2 + t * t * t
@@ -129,7 +131,20 @@ export function originField(origin: Origin, aspect: number, pointer?: [number, n
   return { radial: 1, seed, dir: [0, 0], off: 0, maxDist: Math.max(maxDist, 1e-6) }
 }
 
-const DEFAULT_ORIGIN: Record<Trigger, Origin> = { hover: 'pointer', inView: 'bottom', manual: 'center' }
+const DEFAULT_ORIGIN: Record<Trigger, Origin> = { hover: 'pointer', inView: 'bottom', scroll: 'bottom', manual: 'center' }
+
+/**
+ * trigger 'scroll': 0 while the card's top is below the viewport, 1 once its center reaches the
+ * viewport's center, linear in between.
+ */
+export function scrollProgress(top: number, height: number, viewport: number): number {
+  return clamp01((viewport - top) / Math.max(1, viewport * 0.5 + height * 0.5))
+}
+
+/** Exponential smoothing that behaves the same at 60 Hz and 120 Hz. */
+export function damp(current: number, target: number, lambda: number, dt: number): number {
+  return target + (current - target) * Math.exp(-lambda * dt)
+}
 
 /** The threshold the shader compares the field against (mirrors FRAG): nothing at 0, everything at 1. */
 export function frontAt(progress: number, feather: number): { t: number; w: number } {
@@ -201,8 +216,6 @@ export function colorToRgb(css: string): RGB | null {
   return null
 }
 
-const clamp01 = (t: number) => Math.min(1, Math.max(0, t))
-
 /* ----------------------------- shader ----------------------------------- */
 
 const VERT = `#version 300 es
@@ -215,13 +228,17 @@ void main() {
 
 // Authored here: an integer hash, value noise, five-octave fbm. The front is the
 // fbm field pulled toward a seed point (or an edge), thresholded with a feather;
-// an ink band and a darker rim sit on the front; the unrevealed paper holds a
-// faint desaturated ghost of the image; static paper grain on top.
+// ink wicks a little ahead of it along paper fibers; an ink band and a rim that
+// pools unevenly sit on the front; the unrevealed paper holds a faint
+// desaturated ghost of the image (or a second image); static paper grain on top.
 const FRAG = `#version 300 es
 precision highp float;
 in vec2 vUv;
 out vec4 fragColor;
 uniform sampler2D uTex;
+uniform sampler2D uRestTex;
+uniform float uSwap;
+uniform vec2 uRestCover;
 uniform vec2 uResolution;
 uniform vec2 uCover;
 uniform float uScale;
@@ -279,20 +296,31 @@ void main() {
 
   float w = max(uFeather, 0.002) * 0.5;
   float t = -w - 0.03 + (1.0 + 2.0 * w + 0.03) * uProgress;
-  float reveal = 1.0 - smoothstep(t - w, t + w, f);
+  // near the front, ink wicks ahead along paper fibers: thin curved strands from ridged noise
+  vec2 fq = q * uNoiseScale * 3.0;
+  float r1 = 1.0 - abs(2.0 * vnoise(vec2(fq.x * 3.0 + fq.y * 1.2, fq.y * 0.7 - fq.x * 0.3) + vnoise(fq * 1.7) * 1.5) - 1.0);
+  float r2 = 1.0 - abs(2.0 * vnoise(vec2(fq.x * 0.6 - fq.y * 0.4 + 5.0, fq.y * 3.0 + fq.x * 0.9) + vnoise(fq * 1.3 + 9.0) * 1.5) - 1.0);
+  float fib = pow(max(r1, r2), 16.0);
+  // on dark paper a light image's edge would read as glow, so the edge tightens and the fibers shorten
+  float dark = 1.0 - smoothstep(0.2, 0.45, dot(uPaper, vec3(0.299, 0.587, 0.114)));
+  f -= fib * w * mix(0.55, 0.3, dark) * (1.0 - smoothstep(w, w * 2.0, abs(f - t)));
+  // a crisp outer edge: the softness lives inside the front, so it reads as ink, not fog
+  float reveal = 1.0 - smoothstep(t - w * mix(0.6, 0.22, dark), t + w * mix(0.3, 0.15, dark), f);
   float band = smoothstep(t - w * 0.8, t, f) * (1.0 - smoothstep(t, t + w * 0.2, f));
   float rim = 1.0 - smoothstep(0.0, w * 0.22, abs(f - t));
+  float pool = 0.45 + 1.1 * vnoise(q * uNoiseScale * 2.2 + 3.0); // ink pools more along some stretches of the edge
 
   float lum = dot(img, vec3(0.299, 0.587, 0.114));
   vec3 ghost = mix(uPaper, mix(img, vec3(lum), 0.65), uRest);
+  if (uSwap > 0.5) ghost = texture(uRestTex, 0.5 + (uv - 0.5) * uRestCover).rgb;
   vec3 col = mix(ghost, img, reveal);
-  col = mix(col, mix(img, uInk, 0.7), band * 0.42); // the tide line carries the image's own tone into the ink
-  col *= 1.0 - rim * 0.22;
+  col = mix(col, mix(img, uInk, 0.7), band * 0.42 * pool); // the tide line carries the image's own tone into the ink
+  col *= 1.0 - rim * 0.22 * pool;
   col += (hash2(uv * uResolution * 0.5) - 0.5) * uGrain * 0.1;
   fragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
 }`
 
-const UNIFORMS = ['uTex', 'uResolution', 'uCover', 'uScale', 'uProgress', 'uFeather', 'uGrain', 'uNoiseScale', 'uRest', 'uRadial', 'uSeed', 'uDir', 'uOff', 'uMaxDist', 'uPaper', 'uInk'] as const
+const UNIFORMS = ['uTex', 'uRestTex', 'uSwap', 'uRestCover', 'uResolution', 'uCover', 'uScale', 'uProgress', 'uFeather', 'uGrain', 'uNoiseScale', 'uRest', 'uRadial', 'uSeed', 'uDir', 'uOff', 'uMaxDist', 'uPaper', 'uInk'] as const
 
 interface DrawUniforms {
   progress: number
@@ -305,6 +333,8 @@ interface DrawUniforms {
   ink: RGB
   field: Field
   cover: { sx: number; sy: number }
+  /** object-fit: cover for the rest image, when there is one */
+  restCover: { sx: number; sy: number }
 }
 
 /**
@@ -317,8 +347,8 @@ class InkSurface {
   private gl: WebGL2RenderingContext | null = null
   private program: WebGLProgram | null = null
   private loc = new Map<string, WebGLUniformLocation | null>()
-  private textures = new Map<number, WebGLTexture>()
-  private images = new Map<number, HTMLImageElement>()
+  private textures = new Map<string, WebGLTexture>()
+  private images = new Map<string, HTMLImageElement>()
   private redraws = new Map<number, () => void>()
   private lost = false
   ok = false
@@ -343,7 +373,10 @@ class InkSurface {
     this.textures.clear()
     this.ok = this.init()
     if (!this.ok) return
-    for (const [id, img] of this.images) this.upload(id, img)
+    for (const [key, img] of this.images) {
+      const [id, slot] = key.split(':').map(Number) as [number, number]
+      this.upload(id, img, slot)
+    }
     for (const redraw of this.redraws.values()) redraw()
   }
 
@@ -380,6 +413,7 @@ class InkSurface {
     this.loc.clear()
     for (const name of UNIFORMS) this.loc.set(name, gl.getUniformLocation(program, name))
     gl.uniform1i(this.loc.get('uTex')!, 0)
+    gl.uniform1i(this.loc.get('uRestTex')!, 1)
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1)
     gl.enable(gl.SCISSOR_TEST)
     this.gl = gl
@@ -391,11 +425,13 @@ class InkSurface {
     this.redraws.set(id, redraw)
   }
 
-  upload(id: number, img: HTMLImageElement) {
-    this.images.set(id, img)
+  /** slot 0 is the image that develops; slot 1 the optional image shown at rest. */
+  upload(id: number, img: HTMLImageElement, slot = 0) {
+    const key = `${id}:${slot}`
+    this.images.set(key, img)
     const gl = this.gl
     if (!gl || this.lost) return
-    const tex = this.textures.get(id) ?? gl.createTexture()!
+    const tex = this.textures.get(key) ?? gl.createTexture()!
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, tex)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
@@ -403,20 +439,24 @@ class InkSurface {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img)
-    this.textures.set(id, tex)
+    this.textures.set(key, tex)
   }
 
-  forget(id: number) {
-    const tex = this.textures.get(id)
-    if (tex && this.gl && !this.lost) this.gl.deleteTexture(tex)
-    this.textures.delete(id)
-    this.images.delete(id)
-    this.redraws.delete(id)
+  forget(id: number, slot?: number) {
+    for (const s of slot === undefined ? [0, 1] : [slot]) {
+      const key = `${id}:${s}`
+      const tex = this.textures.get(key)
+      if (tex && this.gl && !this.lost) this.gl.deleteTexture(tex)
+      this.textures.delete(key)
+      this.images.delete(key)
+    }
+    if (slot === undefined) this.redraws.delete(id)
   }
 
   draw(id: number, target: CanvasRenderingContext2D, width: number, height: number, u: DrawUniforms): boolean {
     const gl = this.gl
-    const tex = this.textures.get(id)
+    const tex = this.textures.get(`${id}:0`)
+    const restTex = this.textures.get(`${id}:1`)
     if (!gl || !this.program || !this.ok || !tex || width < 1 || height < 1) return false
     if (this.canvas.width < width || this.canvas.height < height) {
       this.canvas.width = Math.min(4096, Math.max(this.canvas.width, width))
@@ -430,9 +470,13 @@ class InkSurface {
     gl.scissor(0, y, W, H)
     gl.clearColor(0, 0, 0, 0)
     gl.clear(gl.COLOR_BUFFER_BIT)
+    gl.activeTexture(gl.TEXTURE1)
+    gl.bindTexture(gl.TEXTURE_2D, restTex ?? tex) // never leave unit 1 empty
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, tex)
     const L = (n: string) => this.loc.get(n)!
+    gl.uniform1f(L('uSwap'), restTex ? 1 : 0)
+    gl.uniform2f(L('uRestCover'), u.restCover.sx, u.restCover.sy)
     gl.uniform2f(L('uResolution'), W, H)
     gl.uniform2f(L('uCover'), u.cover.sx, u.cover.sy)
     gl.uniform1f(L('uScale'), u.scale)
@@ -515,11 +559,20 @@ const CAN_HOVER = '(hover: hover) and (pointer: fine)'
 export interface InkRevealProps {
   src: string
   alt: string
-  /** 'hover' (default), 'inView' (develops when scrolled into view), or 'manual' (follows `progress`). */
+  /**
+   * A second image to show at rest instead of the faint wash; `src` then inks in over it.
+   * Decorative: describe what matters in `alt`. Needs CORS like `src`; without it the wash is used.
+   */
+  restSrc?: string
+  /**
+   * 'hover' (default), 'inView' (develops once scrolled into view), 'scroll' (follows the scroll:
+   * blank paper as the card enters, fully developed when its center reaches the middle of the
+   * viewport), or 'manual' (follows `progress`).
+   */
   trigger?: Trigger
   /** 0–1, used when trigger is 'manual'. */
   progress?: number
-  /** Where the ink arrives first. Defaults: hover → 'pointer', inView → 'bottom', manual → 'center'. */
+  /** Where the ink arrives first. Defaults: hover → 'pointer', inView and scroll → 'bottom', manual → 'center'. */
   origin?: Origin
   /** A NAMED_CURVES key ('ink', 'lusion', 'expo.out', …), a cubic-bezier() string, or 'linear'. */
   ease?: string
@@ -542,13 +595,14 @@ export interface InkRevealProps {
   /** Device-pixel-ratio cap for the canvas. */
   dprCap?: number
   className?: string
-  /** Overlay content, laid over the image (pointer events pass through). */
+  /** Overlay content, laid over the image (pointer events pass through). It can read the progress from the CSS variable --ink-reveal (0–1). */
   children?: React.ReactNode
 }
 
 export default function InkReveal({
   src,
   alt,
+  restSrc,
   trigger = 'hover',
   progress = 0,
   origin,
@@ -629,6 +683,7 @@ export default function InkReveal({
     let W = 0
     let H = 0
     let imgAspect = 1
+    let restAspect = 1
     let paper: RGB = [1, 1, 1]
     let ink: RGB = [0.1, 0.1, 0.1]
     const theme = () => {
@@ -653,6 +708,7 @@ export default function InkReveal({
         ink,
         field: s.field ?? originField(o.origin ?? DEFAULT_ORIGIN[o.mode], s.aspect),
         cover: coverScale(W / H, imgAspect),
+        restCover: coverScale(W / H, restAspect),
       })
     }
     surf.register(id, () => s.paint())
@@ -679,6 +735,22 @@ export default function InkReveal({
       setFailed(true)
     }
     img.src = src
+
+    let rest: HTMLImageElement | null = null
+    if (restSrc) {
+      rest = new Image()
+      rest.crossOrigin = 'anonymous'
+      rest.decoding = 'async'
+      rest.onload = () => {
+        restAspect = rest!.naturalWidth / Math.max(1, rest!.naturalHeight)
+        surf.upload(id, rest!, 1)
+        s.paint()
+      }
+      rest.onerror = () => {
+        console.warn(`[ink-reveal] restSrc ${restSrc} could not become a WebGL texture (usually missing CORS headers). Showing the wash instead.`)
+      }
+      rest.src = restSrc
+    }
 
     const ro = new ResizeObserver(([entry]) => {
       const r = entry?.contentRect
@@ -712,9 +784,10 @@ export default function InkReveal({
       scheme.removeEventListener('change', onTheme)
       img.onload = null
       img.onerror = null
+      if (rest) rest.onload = rest.onerror = null
       surf.forget(id)
     }
-  }, [src, plain, dprCap])
+  }, [src, restSrc, plain, dprCap])
 
   // hover: bloom from the entry point; keyboard focus on a wrapping link or button counts as hover
   React.useEffect(() => {
@@ -779,6 +852,42 @@ export default function InkReveal({
       s.start = () => {}
     }
   }, [plain, mode, once, animateTo, seed])
+
+  // scroll: progress follows the card's position, smoothed so wheel steps do not judder
+  React.useEffect(() => {
+    if (plain || mode !== 'scroll') return
+    const root = rootRef.current
+    if (!root) return
+    const s = live.current
+    s.tween?.cancel()
+    s.tween = null
+    s.field = null // paint derives it from the current size and origin
+    let raf = 0
+    let last = 0
+    const step = (now: number) => {
+      raf = 0
+      const dt = last ? Math.min(0.05, (now - last) / 1000) : 1 / 60
+      last = now
+      const r = root.getBoundingClientRect()
+      const target = scrollProgress(r.top, r.height, window.innerHeight)
+      s.p = damp(s.p, target, 12, dt)
+      if (Math.abs(s.p - target) < 5e-4) s.p = target
+      s.paint()
+      if (s.p !== target) raf = requestAnimationFrame(step)
+      else last = 0
+    }
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(step)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    onScroll()
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+    }
+  }, [plain, mode])
 
   // manual: follow the prop exactly
   React.useEffect(() => {

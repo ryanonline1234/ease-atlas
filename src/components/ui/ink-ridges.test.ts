@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { colorToRgb, damp, inkScaleFor, layerAt, paintAt } from './ink-ridges'
+import { colorToRgb, damp, inkScaleFor, layerAt, moonFor, paintAt, ridgeLineAt, scrollDrop, sunBloom } from './ink-ridges'
 
 describe('install-safety', () => {
   it('starts with a use client directive and imports nothing but React', async () => {
@@ -152,5 +152,46 @@ describe('birdsAt (the flock)', () => {
     const b = birdsAt(f, 6, opt).birds
     expect(b[0]!.x).toBeLessThan(a[0]!.x)
     expect(a[1]!.x).toBeGreaterThan(a[0]!.x) // followers trail behind the leader
+  })
+})
+
+describe('the sun', () => {
+  it('blooms last: nothing before 55% of the paint-in, all of it by 95%, never shrinking', () => {
+    expect(sunBloom(0)).toBe(0)
+    expect(sunBloom(0.55)).toBe(0)
+    expect(sunBloom(0.95)).toBe(1)
+    expect(sunBloom(1)).toBe(1)
+    let prev = 0
+    for (let p = 0; p <= 1; p += 0.01) {
+      const v = sunBloom(p)
+      expect(v).toBeGreaterThanOrEqual(prev - 1e-12)
+      prev = v
+    }
+  })
+  it('spreads like a drop: fast at first, then slowing', () => {
+    expect(sunBloom(0.65)).toBeGreaterThan(0.5) // a quarter of the way in time, more than half of the way in size
+  })
+  it("becomes the moon on dark paper under 'auto', and only there", () => {
+    expect(moonFor('auto', [0.04, 0.04, 0.05])).toBe(true)
+    expect(moonFor('auto', [0.98, 0.97, 0.95])).toBe(false)
+    expect(moonFor(true, [1, 1, 1])).toBe(true)
+    expect(moonFor(false, [0, 0, 0])).toBe(false)
+  })
+})
+
+describe('scroll depth', () => {
+  it('is 0 until the frame scrolls past the top, then grows to the strength', () => {
+    expect(scrollDrop(-200, 800, 0.35)).toBe(0)
+    expect(scrollDrop(0, 800, 0.35)).toBe(0)
+    expect(scrollDrop(400, 800, 0.35)).toBeCloseTo(0.175, 9)
+    expect(scrollDrop(5000, 800, 0.35)).toBeCloseTo(0.35, 9)
+    expect(scrollDrop(400, 800, 0)).toBe(0)
+  })
+  it('sinks the far ridge by the full drop and leaves the nearest one riding with the page', () => {
+    const opt = { n: 4, horizon: 0.62, seed: 7, aspect: 1.6, shift: [0, 0] as [number, number] }
+    for (const x of [0.1, 0.5, 0.9]) {
+      expect(ridgeLineAt(0, x, { ...opt, drop: 0.1 })).toBeCloseTo(ridgeLineAt(0, x, opt) - 0.1, 9)
+      expect(ridgeLineAt(3, x, { ...opt, drop: 0.1 })).toBeCloseTo(ridgeLineAt(3, x, opt), 9)
+    }
   })
 })

@@ -2,11 +2,13 @@
 
 /**
  * ink-ridges — a sumi-e mountain range painted in front of you. Layered ridges,
- * far to near, each laid down with a brush sweep; ink thins toward every foot
- * and mist drifts between them, under a washed sky with a glowing sun and a few
- * brush-streak clouds. Every so often a small flock of birds crosses, gliding
- * along a ridge. Every seed paints a different range. Use it as a hero or
- * section background: children render on top.
+ * far to near, each laid down with a brush sweep that presses hardest along the
+ * crest; ink thins toward every foot and mist drifts between them, under a
+ * washed sky with a few brush-streak clouds. Last, a red sun blooms like a drop
+ * of pigment, a wisp of mist across it; on dark paper it is a pale moon. Every
+ * so often a small flock of birds crosses, gliding along a ridge. Scroll away
+ * and the far ridges lag while the sun sets behind them. Every seed paints a
+ * different range. Use it as a hero or section background: children render on top.
  *
  * Install
  *   npx @21st-dev/cli add @ryanonline1234/ink-ridges   (needs a free 21st.dev API key)
@@ -16,9 +18,9 @@
  *
  * Frame budget
  *   It draws only while something moves: the paint-in, drifting mist, a flock
- *   in flight, or the pointer settling. Offscreen, in a hidden tab, or with drift and parallax at
- *   0 it draws nothing. prefers-reduced-motion shows the finished landscape as
- *   one static frame.
+ *   in flight, a scroll, or the pointer settling. Offscreen, in a hidden tab, or
+ *   with drift and parallax at 0 it draws nothing. prefers-reduced-motion shows
+ *   the finished landscape as one static frame, without birds or scroll depth.
  *
  * Frameworks
  *   Next.js App Router: a Client Component ('use client' above). Vite: nothing extra.
@@ -77,6 +79,26 @@ export function inkScaleFor(paper: [number, number, number]): number {
   return lum < 0.35 ? 0.62 + (lum / 0.35) * 0.38 : 1
 }
 
+/** How far the sun has bloomed at overall progress p: it is the last touch, spreading like a drop of pigment. */
+export function sunBloom(p: number): number {
+  const t = clamp01((p - 0.55) / 0.4)
+  return 1 - (1 - t) ** 3
+}
+
+/** Whether to paint the moon: always, never, or ('auto') whenever the paper is dark. */
+export function moonFor(moon: boolean | 'auto', paper: [number, number, number]): boolean {
+  if (moon !== 'auto') return moon
+  return 0.2126 * paper[0] + 0.7152 * paper[1] + 0.0722 * paper[2] < 0.35
+}
+
+/**
+ * How far the far ridge sinks (uv) once the top of the frame has scrolled `scrolled` px past the
+ * viewport top: nearer ridges ride with the page, farther ones lag, and the sun sinks fastest.
+ */
+export function scrollDrop(scrolled: number, height: number, strength: number): number {
+  return clamp01(scrolled / Math.max(1, height)) * Math.max(0, strength)
+}
+
 /* The shader's noise, ported so the flock can follow a ridge line exactly. */
 
 function hashU(x: number, y: number): number {
@@ -123,6 +145,8 @@ export interface RidgeOpts {
   seed: number
   aspect: number
   shift: [number, number]
+  /** scrollDrop(): how far the far ridge has sunk on scroll. */
+  drop?: number
 }
 
 /** Height (uv, bottom 0 to top 1) of ridge i's line at uv x, exactly as the shader draws it. */
@@ -133,7 +157,7 @@ export function ridgeLineAt(i: number, uvx: number, o: RidgeOpts): number {
   const n = fbm(x * L.freq + o.seed * 1.37 + i * 7.31, i * 3.7 + o.seed * 0.71)
   const ridged = 1 - Math.abs(2 * vnoise(x * L.freq * 2.3 + i * 5.1 + o.seed, i + o.seed * 0.3) - 1)
   const h = L.base + L.amp * ((n - 0.5) * 2 + (ridged - 0.5) * 0.35)
-  return h - o.shift[1] * k
+  return h - o.shift[1] * k - (o.drop ?? 0) * (1 - L.depth)
 }
 
 export interface Flight {
@@ -261,9 +285,11 @@ void main() {
 }`
 
 // Authored here. Each ridge line is fbm plus a ridged term for sharper peaks;
-// below it, ink thins toward the foot and is broken by brush texture; drifting
-// low-frequency fbm lifts mist out of each foot; a ragged left-to-right sweep
-// lays each ridge down. A soft sun disc sits behind the far ridge. Grain on top.
+// below it, ink thins toward the foot and is broken by brush texture, with more
+// pressure along the crest; drifting low-frequency fbm lifts mist out of each
+// foot; a ragged left-to-right sweep lays each ridge down. The sun is a disc with
+// a noise-wobbled edge, pigment pooled at the rim and granulation inside, crossed
+// by a wisp of mist; the far ridge paints over it. Grain on top.
 const FRAG = `#version 300 es
 precision highp float;
 in vec2 vUv;
@@ -292,6 +318,9 @@ uniform vec4 uBird[8];
 uniform float uBirdAlpha;
 uniform float uBirdDir;
 uniform int uBirdLayer;
+uniform float uMoon;
+uniform float uSunGrow;
+uniform float uDrop;
 
 uint hashU(uvec2 p) {
   uint n = p.x * 1664525u ^ (p.y * 22695477u + 12345u);
@@ -360,24 +389,53 @@ void main() {
 
   // sky: a faint wash deepening toward the top
   col = mix(col, uInk, 0.05 * smoothstep(0.45, 1.0, uv.y) * uInkScale);
+  // the sun sits farther away than any ridge: it barely parallaxes, and sinks fastest on scroll
+  vec2 sc = uSun.xy + uShift * 0.1 - vec2(0.0, uDrop * 2.2);
+  float bloom = smoothstep(0.0, 0.2, uSunGrow);
   // warmth around the sun and a haze along the horizon
   if (uSun.w > 0.5 && uGlow > 0.0) {
-    float ds = length((uv - uSun.xy) * vec2(aspect, 1.0));
+    float ds = length((uv - sc) * vec2(aspect, 1.0));
     float halo = exp(-pow(ds / (uSun.z * 3.2), 2.0));
-    float haze = exp(-pow((uv.y - uHorizonY) / 0.12, 2.0));
-    float fade = smoothstep(0.0, 0.4, uPaintAll);
-    col = mix(col, uSunColor, uGlow * (0.22 * halo + 0.06 * haze) * fade);
+    float haze = exp(-pow((uv.y + uDrop - uHorizonY) / 0.12, 2.0));
+    col = mix(col, uSunColor, uGlow * (mix(0.22, 0.12, uMoon) * halo + mix(0.06, 0.02, uMoon) * haze) * bloom);
   }
+  // the sun, painted: a loaded brush leaves a wobbling edge, pigment pooled at the rim and
+  // granulated inside; the moon is paler and mottled. A wisp of mist crosses its lower half.
+  vec3 skyBack = col; // the sky without the sun: the far ridge paints over the sun, never through it
   if (uSun.w > 0.5) {
-    float d = length((uv - uSun.xy) * vec2(aspect, 1.0));
-    float disc = 1.0 - smoothstep(uSun.z - 0.004, uSun.z + 0.004, d);
-    col = mix(col, uSunColor, disc * 0.85 * smoothstep(0.0, 0.3, uPaintAll));
+    vec2 dv = (uv - sc) * vec2(aspect, 1.0);
+    float d = length(dv);
+    float R = uSun.z * mix(0.15, 1.0, uSunGrow);
+    if (d < R * 1.2) {
+      vec2 dir = dv / max(d, 1e-5);
+      float wob = (fbm3(dir * 1.6 + uSeed * 0.37) - 0.5) * mix(0.07, 0.025, uMoon) + (vnoise(dir * 11.0 + uSeed) - 0.5) * mix(0.03, 0.01, uMoon);
+      float r = R * (1.0 + wob);
+      float disc = 1.0 - smoothstep(r - R * 0.03, r + R * 0.02, d);
+      vec2 lq = dv / R;
+      float gran = fbm3(lq * 7.0 + uSeed * 1.3) - 0.5;
+      float pool = smoothstep(0.6, 1.0, d / r);
+      float wash = clamp(dot(lq, vec2(-0.6, 0.8)) * 0.5 + 0.5, 0.0, 1.0);
+      float dens = 0.78 + 0.16 * pool - 0.12 * wash + 0.16 * gran;
+      vec3 pig = uSunColor * (1.0 - 0.14 * pool * pool);
+      if (uMoon > 0.5) {
+        dens = 0.86 - 0.16 * smoothstep(0.45, 0.72, fbm3(lq * 1.9 + 3.0 + uSeed * 0.2)) + 0.06 * gran;
+        pig = uSunColor;
+      }
+      col = mix(col, pig, clamp(disc * dens, 0.0, 1.0) * bloom);
+    }
+    if (uClouds > 0.0 && d < uSun.z * 3.2) {
+      vec2 mq = dv / uSun.z;
+      float streak = fbm3(vec2(mq.x * 0.55 + uTime * uDrift * 0.6 + uSeed * 0.7, mq.y * 2.6 + uSeed));
+      float strip = exp(-pow((mq.y + 0.42) / 0.32, 2.0));
+      float wisp = smoothstep(0.42, 0.72, streak) * strip * smoothstep(3.2, 1.4, length(mq)) * smoothstep(0.0, 0.5, uClouds);
+      col = mix(col, uPaper, wisp * 0.8 * bloom);
+    }
   }
   // a few long brush-streak clouds, drifting with the mist
   if (uClouds > 0.0) {
-    vec2 cq = vec2(uv.x * aspect * 0.8 + uTime * uDrift * 0.15 + uSeed * 0.53, uv.y * 11.0);
+    vec2 cq = vec2(uv.x * aspect * 0.8 + uTime * uDrift * 0.15 + uSeed * 0.53, (uv.y + uDrop) * 11.0);
     float streak = smoothstep(0.5, 0.8, fbm3(cq));
-    float inSky = smoothstep(uHorizonY - 0.02, uHorizonY + 0.2, uv.y) * (1.0 - smoothstep(0.92, 1.0, uv.y));
+    float inSky = smoothstep(uHorizonY - 0.02, uHorizonY + 0.2, uv.y + uDrop) * (1.0 - smoothstep(0.92, 1.0, uv.y));
     col = mix(col, uInk, uClouds * 0.26 * streak * inSky * uInkScale * smoothstep(0.0, 0.4, uPaintAll));
   }
 
@@ -386,7 +444,7 @@ void main() {
     vec4 L = uLayer[i];
     float fi = float(i);
     float depth = uLayers > 1 ? fi / float(uLayers - 1) : 1.0;
-    vec2 p = uv + uShift * (0.25 + depth);
+    vec2 p = uv + uShift * (0.25 + depth) + vec2(0.0, uDrop * (1.0 - depth));
     float x = p.x * aspect;
     float n = fbm(vec2(x * L.z + uSeed * 1.37 + fi * 7.31, fi * 3.7 + uSeed * 0.71));
     float ridged = 1.0 - abs(2.0 * vnoise(vec2(x * L.z * 2.3 + fi * 5.1 + uSeed, fi + uSeed * 0.3)) - 1.0);
@@ -395,11 +453,20 @@ void main() {
     float bleed = 0.0025 + 0.004 * vnoise(vec2(x * 40.0, fi * 9.0));
     float below = smoothstep(h + bleed, h - bleed, p.y);
     if (below > 0.0) { // above this ridge line: no ink from it, skip the expensive part
+    if (i == 0) col = mix(col, skyBack, below);
     float fall = clamp((h - p.y) / (0.12 + 0.08 * depth), 0.0, 1.0);
     float tex = fbm3(vec2(x * 18.0, p.y * 22.0) + fi * 4.0 + uSeed);
     float dens = L.w * uInkScale * (1.0 - uMist * 0.95 * fall) * (0.82 + 0.36 * tex);
     float fog = smoothstep(0.42, 0.78, fbm3(vec2(x * 1.6 + uTime * uDrift * (0.4 + depth), p.y * 5.0 + fi * 2.0)));
     dens *= 1.0 - uMist * fog * fall * 0.9;
+
+    // the crest: the brush presses hardest along the ridge line and skips where it runs dry
+    float under = h - p.y;
+    if (under < 0.03) {
+      float crest = 1.0 - smoothstep(0.0, 0.004 + 0.01 * depth, under);
+      float press = smoothstep(0.25, 0.7, vnoise(vec2(x * 9.0 + fi * 13.0, fi * 2.0 + uSeed)));
+      dens += crest * crest * press * 0.45 * L.w * uInkScale;
+    }
 
     float edge = mix(-0.2, 1.2, uPaint[i]) + (fbm3(vec2(p.y * 14.0, fi * 3.0 + uSeed)) - 0.5) * 0.18;
     float painted = 1.0 - smoothstep(edge - 0.035, edge + 0.035, uv.x);
@@ -413,7 +480,7 @@ void main() {
   fragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
 }`
 
-const UNIFORMS = ['uResolution', 'uTime', 'uSeed', 'uMist', 'uDrift', 'uGrain', 'uLayers', 'uLayer', 'uPaint', 'uPaintAll', 'uShift', 'uPaper', 'uInk', 'uSunColor', 'uSun', 'uInkScale', 'uClouds', 'uGlow', 'uHorizonY', 'uBirdCount', 'uBird', 'uBirdAlpha', 'uBirdDir', 'uBirdLayer'] as const
+const UNIFORMS = ['uResolution', 'uTime', 'uSeed', 'uMist', 'uDrift', 'uGrain', 'uLayers', 'uLayer', 'uPaint', 'uPaintAll', 'uShift', 'uPaper', 'uInk', 'uSunColor', 'uSun', 'uInkScale', 'uClouds', 'uGlow', 'uHorizonY', 'uBirdCount', 'uBird', 'uBirdAlpha', 'uBirdDir', 'uBirdLayer', 'uMoon', 'uSunGrow', 'uDrop'] as const
 
 interface Frame {
   time: number
@@ -438,6 +505,9 @@ interface Frame {
   birdAlpha: number
   birdDir: number
   birdLayer: number
+  moon: boolean
+  sunGrow: number
+  drop: number
 }
 
 /** One quad, one program, no textures; renders on demand. */
@@ -552,6 +622,9 @@ class RidgesGL {
     gl.uniform1f(L('uBirdAlpha'), f.birdAlpha)
     gl.uniform1f(L('uBirdDir'), f.birdDir)
     gl.uniform1i(L('uBirdLayer'), f.birdLayer)
+    gl.uniform1f(L('uMoon'), f.moon ? 1 : 0)
+    gl.uniform1f(L('uSunGrow'), f.sunGrow)
+    gl.uniform1f(L('uDrop'), f.drop)
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
   }
 
@@ -590,8 +663,12 @@ export interface InkRidgesProps {
   sunPosition?: [number, number]
   /** Sun radius as a fraction of the frame height. */
   sunSize?: number
-  /** CSS color of the sun. Defaults to the ink color. */
+  /** CSS color of the sun. Defaults to vermilion, the red of a painter's seal. The moon is always painted in the ink color. */
   sunColor?: string
+  /** Paint a pale, mottled moon instead of the sun: always, never, or 'auto' (on dark paper). */
+  moon?: boolean | 'auto'
+  /** Scroll depth: as the frame scrolls up out of view, far ridges lag and the sun sets. 0 turns it off. */
+  scrollDepth?: number
   /** CSS color of the ink. Defaults to the text color. */
   inkColor?: string
   /** Paper grain, 0–1. */
@@ -624,7 +701,9 @@ export default function InkRidges({
   sun = true,
   sunPosition = [0.78, 0.74],
   sunSize = 0.07,
-  sunColor,
+  sunColor = '#b5402a',
+  moon = 'auto',
+  scrollDepth = 0.35,
   inkColor,
   grain = 0.3,
   clouds = 0.35,
@@ -639,8 +718,8 @@ export default function InkRidges({
   const rootRef = React.useRef<HTMLDivElement>(null)
   const canvasRef = React.useRef<HTMLCanvasElement>(null)
   const [glOk, setGlOk] = React.useState(true)
-  const opts = React.useRef({ layers, horizon, mist, drift, parallax, paintIn, sun, sunPosition, sunSize, sunColor, inkColor, grain, seed, clouds, glow, birds, birdsEvery })
-  opts.current = { layers, horizon, mist, drift, parallax, paintIn, sun, sunPosition, sunSize, sunColor, inkColor, grain, seed, clouds, glow, birds, birdsEvery }
+  const opts = React.useRef({ layers, horizon, mist, drift, parallax, paintIn, sun, sunPosition, sunSize, sunColor, moon, scrollDepth, inkColor, grain, seed, clouds, glow, birds, birdsEvery })
+  opts.current = { layers, horizon, mist, drift, parallax, paintIn, sun, sunPosition, sunSize, sunColor, moon, scrollDepth, inkColor, grain, seed, clouds, glow, birds, birdsEvery }
   const ctl = React.useRef({ kick: () => {}, repaint: () => {}, retheme: () => {} })
 
   React.useEffect(() => {
@@ -670,12 +749,14 @@ export default function InkRidges({
     let paper: RGB = [1, 1, 1]
     let inkRgb: RGB = [0.1, 0.1, 0.1]
     let sunRgb: RGB = [0.1, 0.1, 0.1]
+    let night = false
 
     const theme = () => {
       const o = opts.current
       paper = resolveColor(root, 'backgroundColor')
       inkRgb = (o.inkColor && resolveCssColor(o.inkColor)) || resolveColor(root, 'color')
-      sunRgb = (o.sunColor && resolveCssColor(o.sunColor)) || inkRgb
+      night = moonFor(o.moon, paper)
+      sunRgb = (!night && o.sunColor && resolveCssColor(o.sunColor)) || inkRgb
     }
 
     const kick = () => {
@@ -706,7 +787,8 @@ export default function InkRidges({
       const n = Math.max(1, Math.min(MAX_LAYERS, Math.round(o.layers)))
       const ridges = Array.from({ length: n }, (_, i) => layerAt(i, n, o.horizon))
       const aspect = canvas!.width / Math.max(1, canvas!.height)
-      const ridgeOpts: RidgeOpts = { n, horizon: o.horizon, seed: o.seed, aspect, shift: [ptr.x, ptr.y] }
+      const drop = reduced || o.scrollDepth <= 0 ? 0 : scrollDrop(-root!.getBoundingClientRect().top, root!.clientHeight, o.scrollDepth)
+      const ridgeOpts: RidgeOpts = { n, horizon: o.horizon, seed: o.seed, aspect, shift: [ptr.x, ptr.y], drop }
       // a flock: start one when it is due (never while hidden, painting or under reduced motion), end it when it has crossed
       if (!flight && !reduced && visible && p >= 1 && o.birds > 0 && now >= nextFlightAt) {
         flight = { start: now, duration: 9 + Math.random() * 3, dir: Math.random() < 0.5 ? 1 : -1, count: Math.min(8, Math.round(o.birds)), layer: n >= 3 ? 1 : 0, seed: Math.floor(Math.random() * 1000) }
@@ -745,6 +827,9 @@ export default function InkRidges({
         birdAlpha: flock.alpha,
         birdDir: flight?.dir ?? 1,
         birdLayer: flight ? flight.layer : -1,
+        moon: night,
+        sunGrow: sunBloom(p),
+        drop,
       })
       root!.style.setProperty('--ink-ridges-paint', String(p))
       root!.style.setProperty('--ink-ridges-flight', String(flightU))
@@ -792,6 +877,12 @@ export default function InkRidges({
     root.addEventListener('pointermove', onPointer)
     root.addEventListener('pointerleave', onLeave)
 
+    // scroll depth: redraw on scroll while the frame is on screen
+    const onScroll = () => {
+      if (visible && opts.current.scrollDepth > 0 && !reducedMq.matches) kick()
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+
     const onVisibility = () => kick()
     document.addEventListener('visibilitychange', onVisibility)
     reducedMq.addEventListener('change', onVisibility)
@@ -826,6 +917,7 @@ export default function InkRidges({
       mo.disconnect()
       root.removeEventListener('pointermove', onPointer)
       root.removeEventListener('pointerleave', onLeave)
+      window.removeEventListener('scroll', onScroll)
       document.removeEventListener('visibilitychange', onVisibility)
       reducedMq.removeEventListener('change', onVisibility)
       scheme.removeEventListener('change', onTheme)
@@ -846,10 +938,10 @@ export default function InkRidges({
   // any other change redraws once (and keeps drawing only if something now moves)
   React.useEffect(() => {
     ctl.current.kick()
-  }, [layers, horizon, mist, drift, parallax, sun, sunPosition, sunSize, grain, clouds, glow, birds, birdsEvery])
+  }, [layers, horizon, mist, drift, parallax, sun, sunPosition, sunSize, grain, clouds, glow, birds, birdsEvery, scrollDepth])
   React.useEffect(() => {
     ctl.current.retheme()
-  }, [inkColor, sunColor])
+  }, [inkColor, sunColor, moon])
 
   return (
     <div ref={rootRef} data-ink-ridges="" className={cn('relative isolate overflow-hidden', className)}>

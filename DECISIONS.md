@@ -416,3 +416,76 @@ birds or animals that will move along the ridge every once in a while."
 Rejected: birds as a DOM/SVG overlay (they would not sit behind nearer ridges
 and would need their own theming); a fixed schedule (a flock every N seconds
 exactly reads mechanical).
+
+## 2026-10-20 — InkReveal brush-up and add-ons (revision while in review)
+Ryan: "go ahead and brush up the parts of ink reveal and add any addons because
+we submitted moments earlier its still ok". The freeze rule already allowed
+InkReveal updates; this is Ryan's explicit go for a revision during review.
+- Edge: ink now wicks a little ahead of the front along paper fibers (thin
+  curved strands from ridged value noise, only near the front), the rim pools
+  unevenly along its length, and the outer edge is crisp (the softness lives
+  inside the front). First fiber try used peaked value noise and drew blocky
+  straight scratches; ridged noise draws curved strands.
+- Dark paper: a light image on dark paper read as glowing fog at the edge. On
+  dark paper the edge tightens and the fibers shorten (keyed on the paper's
+  luminance inside the shader), so islands have clean edges in both themes.
+- Add-on `restSrc`: a second image shown at rest; `src` inks in over it
+  (before/after, alternate product view). It shares the one WebGL context
+  (texture unit 1; unit 1 is never left empty). If it fails CORS the card falls
+  back to the wash with one warning. Demo toggle `paired` rests each print on its
+  partner. Light → dark pairs read as ink spreading; dark → light reads as
+  bleaching, so the pairing is a toggle, not the default.
+- Add-on `trigger: 'scroll'`: scrubbed by scroll, 0 as the card's top enters,
+  1 when its center reaches the viewport's center, damped (λ 12) so wheel
+  steps do not judder, and reversible.
+- `--ink-reveal` (0–1) was already published on the root; now documented for
+  overlay children.
+Rejected: a pointer-following front (only visible during the 1.2 s develop); a
+"wet brush" trail on the developed image (a running loop for a gimmick).
+Verified: 84 unit tests, probe 11/11 (new: scroll follows the page and
+reverses; a paired card rests on its partner yet develops to exactly the
+unpaired image), hover frame timing on the M1 Pro at 120 Hz: 1 slow frame of
+1,162 at pixel ratio 1, 0 of 1,460 at 2. Fresh Next.js 16 and Vite 8 projects
+build and run it with a clean console.
+
+## 2026-10-20 — InkRidges: a painted sun, the moon, crests, scroll depth
+Ryan: "think about any other ways we can make it better along with brushing up
+the sun design".
+- Sun: a disc with a noise-wobbled edge, pigment pooled and darkened at the
+  rim, granulation inside, lighter where the brush ran thin, and one wisp of
+  mist crossing its lower half (drawn in paper color, so it also crosses the
+  glow). It is painted last: it blooms from a drop at 55–95% of the paint-in
+  (cubic ease-out), the glow with it. Two even mist bands were tried first and
+  read as stripes; hard-edged bands read as a logo swoosh.
+- The far ridge now paints over the sun instead of through it (the ridge ink
+  is translucent, so the sun showed through when it set).
+- Moon: `moon: 'auto'` (default) paints a pale, mottled moon in the ink color on
+  dark paper; true or false forces it. A red sun on near-black read as a dot.
+- Default `sunColor` is now vermilion `#b5402a`: with the moon handling dark
+  paper, the old default (the ink color) only ever produced a black sun.
+- Crests: the brush presses harder along each ridge line and lifts in places.
+  A first try varied the dry-brush noise across the stroke and drew a double
+  outline; it now varies only along the ridge.
+- Scroll depth (`scrollDepth`, 0.35): once the frame's top scrolls past the
+  viewport top, ridge i sinks by drop × (1 − depth), so far ridges lag and near
+  ones ride with the page, and the sun sinks 2.2× the far ridge so it sets
+  behind it while still on screen (at 1.5× it set only after leaving view).
+  The birds' JS ridge line takes the same drop. Reduced motion: no drop.
+Ideas not built (for Ryan): a lake with reflections; pine clusters on the near
+ridge; weather (rain, snow); mist parting around the pointer.
+Verified: probe 12/12 (new: red sun on light paper and pale moon on dark; once
+scrolled, the far ridge has moved by more than 0.03 and the JS ridge line still
+matches the drawn one within 0.02), real-GPU frame timing 0.32% dropped at
+120 Hz at pixel ratio 1 and 2 with a flock flying. Fresh Next.js 16 and Vite 8
+projects: 60 draws per 500 ms while visible, 0 offscreen, clean console.
+
+## 2026-10-20 — InkReveal revision published; 21st mirrored the demo images
+`21st publish … --component component:22319 --prepare` made revision draft
+ca94b9e1; `--draft … --no-push --auto` published it to the same component,
+which stayed `in_review`. With the demo's image URLs spelled out literally,
+21st copied all four to cdn.21st.dev/assets/mirror/ at publish (zero Wikimedia
+URLs left on the page), and the live preview develops on hover from those
+copies, so the CDN's CORS works for the texture. 21st's local `render` still
+fails for this demo (its sandbox cannot reach Wikimedia before publish), so
+covers and videos stay supplied from here. InkRidges draft 747554f3 got the new
+source and cover, prepare only.

@@ -14,7 +14,11 @@ const settings = {
   grain: 0.3,
   noiseScale: 5,
   inkColor: '#1b1613',
+  // each print rests on its partner instead of a faint wash: Tōhaku's two screens, Sesshū's two landscapes
+  paired: false,
 }
+
+const PARTNER = [2, 3, 0, 1]
 
 const WORKS = [
   {
@@ -50,25 +54,32 @@ const WORKS = [
 const HINT: Record<string, string> = {
   hover: 'Hover or tab to a print',
   inView: 'Scroll a print into view',
+  scroll: 'Scroll the prints up the page',
   manual: 'Scrub the progress control',
 }
 
 export default function Demo(props: Partial<typeof settings> & { src?: string }) {
   const s = { ...settings, ...props }
+  const scrolling = s.trigger === 'scroll'
   return (
     <div className="min-h-screen w-full bg-background px-6 py-16 text-foreground md:px-10">
       <div className="mx-auto max-w-6xl">
+        {scrolling ? (
+          <p className="flex h-[65svh] items-end pb-10 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Scroll down: the prints develop as they rise</p>
+        ) : null}
         <header className="mb-10 flex flex-wrap items-end justify-between gap-6">
           <div>
             <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Ink reveal · {HINT[s.trigger] ?? HINT.hover}</p>
             <h2 className="mt-3 font-serif text-4xl leading-tight tracking-[-0.01em] md:text-5xl">Four prints, developed on contact.</h2>
           </div>
           <p className="max-w-xs text-sm text-muted-foreground">
-            The ink blooms from where you come in and pools at its edge. All four cards draw through one WebGL context.
+            {s.paired
+              ? 'Each print rests on its partner and the other inks in over it. All four cards draw through one WebGL context.'
+              : 'The ink blooms from where you come in and pools at its edge. All four cards draw through one WebGL context.'}
           </p>
         </header>
         <ul className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
-          {WORKS.map((w) => (
+          {WORKS.map((w, i) => (
             <li key={w.slug}>
               <a
                 id={w.slug}
@@ -77,6 +88,7 @@ export default function Demo(props: Partial<typeof settings> & { src?: string })
               >
                 <InkReveal
                   src={props.src ?? w.src}
+                  restSrc={s.paired && !props.src ? WORKS[PARTNER[i]!]!.src : undefined}
                   alt={w.alt}
                   trigger={s.trigger as Trigger}
                   origin={s.origin as Origin}
@@ -98,6 +110,7 @@ export default function Demo(props: Partial<typeof settings> & { src?: string })
           ))}
         </ul>
         <p className="mt-10 text-xs text-muted-foreground">All four works are in the public domain. Images from Wikimedia Commons.</p>
+        {scrolling ? <div className="h-[60svh]" /> : null}
       </div>
     </div>
   )

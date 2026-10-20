@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { chromium, type Browser, type BrowserContextOptions, type Page } from 'playwright'
 import { createServer, type ViteDevServer } from 'vite'
-import { ridgeLineAt } from '@/components/ui/ink-ridges'
+import { ridgeLineAt, scrollDrop } from '@/components/ui/ink-ridges'
 
 const PORT = 5184
 const url = (q = '', dark = 0) => `http://localhost:${PORT}/?demo=ink-ridges&dark=${dark}${q}`
@@ -212,6 +212,71 @@ describe('ink ridges: sky and birds', () => {
     const opt = { n: 4, horizon: 0.62, seed: 7, aspect: box.width / box.height, shift: [0, 0] as [number, number] }
     xs.forEach((fx, i) => {
       expect(Math.abs(measured[i]! - ridgeLineAt(0, fx, opt)), `far ridge at x=${fx}`).toBeLessThan(0.02)
+    })
+    await close()
+  })
+})
+
+describe('ink ridges: sun, moon and scroll depth', () => {
+  const sunPixel = async (page: Page) => {
+    const box = (await page.locator('[data-ink-ridges]').boundingBox())!
+    const b64 = (await page.locator('[data-ink-ridges]').screenshot({ scale: 'css' })).toString('base64')
+    return page.evaluate(async ([s, w, h]) => {
+      const bmp = await createImageBitmap(await (await fetch('data:image/png;base64,' + s)).blob())
+      const c = document.createElement('canvas'); c.width = bmp.width; c.height = bmp.height
+      const x = c.getContext('2d')!; x.drawImage(bmp, 0, 0)
+      const d = x.getImageData(Math.round(0.78 * (w as number)), Math.round(0.26 * (h as number)) - 6, 1, 1).data // just above center, clear of the mist
+      return [d[0]!, d[1]!, d[2]!]
+    }, [b64, box.width, box.height] as const)
+  }
+  it('paints a red sun on light paper and a pale moon on dark paper', async () => {
+    const q = '&drift=0&paintIn=0&birds=0&clouds=0&parallax=0'
+    const light = await open(q)
+    await waitPainted(light.page)
+    const [r, g] = await sunPixel(light.page)
+    expect(r! - g!).toBeGreaterThan(40)
+    await light.close()
+    const dark = await open(q, { dark: 1 })
+    await waitPainted(dark.page)
+    const [mr, mg, mb] = await sunPixel(dark.page)
+    expect((mr! + mg! + mb!) / 3).toBeGreaterThan(140)
+    expect(Math.abs(mr! - mb!)).toBeLessThan(25)
+    await dark.close()
+  })
+
+  it('scrolled, the far ridge sinks and the ridge line the birds follow still matches the drawn one', async () => {
+    const { page, close } = await open('&drift=0&paintIn=0&birds=0&clouds=0&glow=0&sun=false&mist=0&parallax=0')
+    await waitPainted(page)
+    const box0 = (await page.locator('[data-ink-ridges]').boundingBox())!
+    const S = 150
+    await page.evaluate((y) => window.scrollTo(0, y), S)
+    await page.waitForTimeout(400)
+    const H = box0.height
+    const visible = H - S
+    const b64 = (await page.screenshot({ clip: { x: box0.x, y: 0, width: box0.width, height: visible }, scale: 'css' })).toString('base64')
+    const xs = [0.5, 0.6, 0.7, 0.8, 0.92]
+    const rows: number[] = await page.evaluate(async ([s, cols]) => {
+      const bmp = await createImageBitmap(await (await fetch('data:image/png;base64,' + s)).blob())
+      const c = document.createElement('canvas'); c.width = bmp.width; c.height = bmp.height
+      const x = c.getContext('2d')!; x.drawImage(bmp, 0, 0)
+      const out: number[] = []
+      for (const fx of cols as number[]) {
+        const col = x.getImageData(Math.round(fx * (bmp.width - 1)), 0, 1, bmp.height).data
+        const paper = (col[4 * 2]! + col[4 * 2 + 1]! + col[4 * 2 + 2]!) / 3
+        let y = -1
+        for (let r = 2; r < bmp.height; r++) { const l = (col[4 * r]! + col[4 * r + 1]! + col[4 * r + 2]!) / 3; if (l < paper - 18) { y = r; break } }
+        out.push(y)
+      }
+      return out
+    }, [b64, xs] as const)
+    const drop = scrollDrop(S, H, 0.35)
+    expect(drop).toBeGreaterThan(0.05)
+    const opt = { n: 4, horizon: 0.62, seed: 7, aspect: box0.width / H, shift: [0, 0] as [number, number] }
+    xs.forEach((fx, i) => {
+      expect(rows[i], `found ink at x=${fx}`).toBeGreaterThan(0)
+      const measured = 1 - (rows[i]! + S) / H
+      expect(Math.abs(measured - ridgeLineAt(0, fx, { ...opt, drop })), `far ridge at x=${fx}`).toBeLessThan(0.02)
+      expect(Math.abs(measured - ridgeLineAt(0, fx, opt)), `and it moved at x=${fx}`).toBeGreaterThan(0.03)
     })
     await close()
   })

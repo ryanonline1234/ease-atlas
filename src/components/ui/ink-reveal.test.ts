@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { colorToRgb, createTween, effectiveTrigger, frontAt, originField, resolveEase } from './ink-reveal'
+import { colorToRgb, createTween, damp, effectiveTrigger, frontAt, originField, resolveEase, scrollProgress } from './ink-reveal'
 
 describe('install-safety', () => {
   it('starts with a use client directive', async () => {
@@ -116,5 +116,33 @@ describe('createTween', () => {
     const seen: number[] = []
     createTween({ from: 0.3, to: 0, duration: 0, ease: (t) => t, onUpdate: (v) => seen.push(v) }, c)
     expect(seen).toEqual([0])
+  })
+})
+
+describe('scrollProgress (trigger: scroll)', () => {
+  const vh = 900
+  it('is 0 while the card is still below the viewport', () => {
+    expect(scrollProgress(950, 400, vh)).toBe(0)
+    expect(scrollProgress(900, 400, vh)).toBe(0)
+  })
+  it('reaches 1 when the card center reaches the viewport center, and stays there above it', () => {
+    expect(scrollProgress(vh / 2 - 200, 400, vh)).toBeCloseTo(1, 9)
+    expect(scrollProgress(-300, 400, vh)).toBe(1)
+  })
+  it('is linear in between', () => {
+    expect(scrollProgress(900 - 325, 400, vh)).toBeCloseTo(0.5, 9)
+  })
+  it('a device that cannot hover keeps the scroll trigger', () => {
+    expect(effectiveTrigger('scroll', false)).toBe('scroll')
+  })
+})
+
+describe('damp', () => {
+  it('lands closer each step and is frame-rate independent', () => {
+    const a = damp(damp(0, 1, 12, 1 / 120), 1, 12, 1 / 120)
+    const b = damp(0, 1, 12, 1 / 60)
+    expect(a).toBeCloseTo(b, 9)
+    expect(b).toBeGreaterThan(0)
+    expect(b).toBeLessThan(1)
   })
 })

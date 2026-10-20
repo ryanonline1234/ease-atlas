@@ -91,10 +91,11 @@ dries.
 ![InkReveal: hovering each card blooms the ink from where the pointer enters](docs/ink-reveal.gif)
 
 An image that develops like ink soaking into paper. At rest the card holds a
-faint wash of the image; on hover the ink blooms from where the pointer came in,
-islands spreading with a tide line in the image's own tone, and it recedes when
-the pointer leaves. It can also develop when scrolled into view, or follow a
-progress value you drive.
+faint wash of the image, or a second image; on hover the ink blooms from where
+the pointer came in, islands spreading with a tide line in the image's own tone
+and fine strands wicking ahead along the paper's fibers, and it recedes when the
+pointer leaves. It can also develop when scrolled into view, scrub with the
+scroll, or follow a progress value you drive.
 
 ```bash
 npx @21st-dev/cli add @ryanonline1234/ink-reveal
@@ -119,9 +120,10 @@ four public-domain ink paintings by Hasegawa Tōhaku and Sesshū Tōyō.
 | Prop | Default | What it does |
 |---|---|---|
 | `src`, `alt` | — | The image; a cross-origin `src` needs CORS headers for the effect |
-| `trigger` | `'hover'` | `'hover'`, `'inView'`, or `'manual'` |
+| `restSrc` | — | A second image shown at rest; `src` inks in over it (before/after, alternate view). Decorative, so describe what matters in `alt` |
+| `trigger` | `'hover'` | `'hover'`, `'inView'` (once, on entering view), `'scroll'` (scrubbed: blank as the card enters, developed when its center reaches the middle of the viewport), or `'manual'` |
 | `progress` | `0` | 0–1, followed exactly when `trigger` is `'manual'` |
-| `origin` | per trigger | `'pointer'` (hover), `'bottom'` (inView), `'center'` (manual), or `'top'`, `'left'`, `'right'` |
+| `origin` | per trigger | `'pointer'` (hover), `'bottom'` (inView, scroll), `'center'` (manual), or `'top'`, `'left'`, `'right'` |
 | `ease` | `'ink'` | Any atlas curve name, a `cubic-bezier()` string, or `'linear'` |
 | `duration` | `1200` | Develop time in ms; receding takes 70% of it |
 | `rest` | `0.2` | How much of the image shows at rest, 0 to 1 |
@@ -131,17 +133,21 @@ four public-domain ink paintings by Hasegawa Tōhaku and Sesshū Tōyō.
 | `inkColor` | text color | Color of the ink at the front |
 | `once` | `true` | inView: stay developed, or recede when scrolled away |
 | `aspectRatio` | `'4 / 5'` | The card's CSS aspect ratio |
-| `children` | — | Overlay content laid over the image |
+| `children` | — | Overlay content laid over the image; it can read the progress from the CSS variable `--ink-reveal` (0–1) |
 
 ## InkRidges
 
 ![InkRidges: a sumi-e mountain range brushes itself in, far ridge first, a small flock crosses above a far ridge, then it repaints from a new seed](docs/ink-ridges.gif)
 
 A sumi-e mountain range painted in front of you. Layered ridges, far to near,
-are each laid down with a brush sweep; the ink thins toward every foot and mist
-drifts between them. Thin cloud streaks cross a sky that warms around the sun,
-and every so often a small flock flies across, following the line of a far
-ridge. Every seed paints a different range. Use it as a hero or section
+are each laid down with a brush sweep that presses hardest along the crest; the
+ink thins toward every foot and mist drifts between them. Thin cloud streaks
+cross a sky that warms around the sun. The sun is painted last, blooming like a
+drop of pigment with a wobbling edge, pigment pooled at its rim and a wisp of
+mist across it; on dark paper it becomes a pale, mottled moon. Every so often a
+small flock flies across, following the line of a far ridge, and as the frame
+scrolls away the far ridges lag behind the near ones while the sun sets behind
+them. Every seed paints a different range. Use it as a hero or section
 background: children render on top.
 
 ```bash
@@ -151,7 +157,7 @@ npx @21st-dev/cli add @ryanonline1234/ink-ridges
 - **Nothing but React**, and no images: the whole landscape is an authored
   fragment shader.
 - **Draws only while something moves**: the paint-in, drifting mist, a flock
-  crossing, or the pointer settling. Offscreen, in a hidden tab, or with
+  crossing, a scroll, or the pointer settling. Offscreen, in a hidden tab, or with
   `drift`, `parallax` and `birds` at 0 it draws nothing; between flocks a timer
   wakes it, not a running loop. Measured on an M1 Pro at 120 Hz with drifting
   mist, clouds and a flock in the air: 0.42% dropped frames at pixel ratio 1,
@@ -176,9 +182,11 @@ Demo: [`src/demos/ink-ridges/default.tsx`](src/demos/ink-ridges/default.tsx).
 | `drift` | `0.05` | Mist drift speed; 0 holds it still |
 | `parallax` | `0.03` | Pointer parallax; 0 turns it off |
 | `paintIn` | `2400` | Brush-in time in ms; 0 shows it painted |
-| `sun`, `sunPosition`, `sunSize`, `sunColor` | on, `[0.78, 0.74]`, `0.07`, ink | A disc behind the far ridge |
+| `sun`, `sunPosition`, `sunSize`, `sunColor` | on, `[0.78, 0.74]`, `0.07`, vermilion `#b5402a` | A painted sun behind the far ridge |
+| `moon` | `'auto'` | Paint a pale moon instead: `true`, `false`, or `'auto'` (on dark paper) |
+| `scrollDepth` | `0.35` | As the frame scrolls up out of view, far ridges lag and the sun sets; 0 turns it off |
 | `glow` | `0.45` | Warm halo around the sun and haze along the horizon; 0 turns it off |
-| `clouds` | `0.35` | Thin drifting cloud streaks in the sky; 0 turns them off |
+| `clouds` | `0.35` | Thin drifting cloud streaks in the sky and the wisp across the sun; 0 turns them off |
 | `birds` | `5` | Birds per flock, 0–8; 0 turns flocks off |
 | `birdsEvery` | `14` | Average seconds between flocks (each crossing takes 9–12 s) |
 | `inkColor` | text color | Ink color |

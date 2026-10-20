@@ -14,6 +14,9 @@ const settings = {
   paintIn: 2600,
   sun: true,
   sunColor: '#b5402a',
+  // 'auto' paints a pale moon instead of the sun on dark paper
+  moon: 'auto' as 'auto' | boolean,
+  scrollDepth: 0.35,
   glow: 0.45,
   clouds: 0.35,
   birds: 5,
@@ -37,6 +40,8 @@ export default function Demo(props: Partial<typeof settings>) {
         paintIn={s.paintIn}
         sun={s.sun}
         sunColor={s.sunColor}
+        moon={s.moon}
+        scrollDepth={s.scrollDepth}
         glow={s.glow}
         clouds={s.clouds}
         birds={s.birds}
@@ -53,7 +58,7 @@ export default function Demo(props: Partial<typeof settings>) {
             painted in place.
           </h1>
           <p className="mt-5 max-w-sm text-sm text-muted-foreground">
-            Every seed paints a different range. Ink thins toward each foot, mist drifts between the ridges, and now and then a flock crosses.
+            Every seed paints a different range. Ink thins toward each foot, mist drifts between the ridges, now and then a flock crosses, and the sun sets as you scroll on.
           </p>
           <button
             type="button"
