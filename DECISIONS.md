@@ -502,3 +502,15 @@ method". Findings, from the CLI source and live runs:
   no way to attach it.
 - The only route is the website's manual media replace, in a signed-in
   browser. The draft keeps the supplied cover and stays unpublished.
+
+## 2026-10-20 — Ink Reveal's demo video uploaded through the Edit dialog
+With Ryan signed in to 21st in the browser pane: the two videos were
+re-recorded at 4:3 (21st's own media is about 4:3: its renderer makes 1280×960,
+Ink Hero's video is 1594×1272) and committed under `docs/media/` so a 21st
+page can fetch them from raw.githubusercontent.com. On Ink Reveal's component
+page, Edit → Media → Video → Add uploads at once to
+`cdn.21st.dev/…/ink-reveal/default/video.<ts>.mp4`, and Save keeps it. The
+public page serves it, and the review status stayed `in_review`.
+The Ink Ridges draft cannot hold a video: the CLI review page only stages it
+until "Publish component". Its video goes up the same way right after
+publishing, if Ryan says publish.

@@ -12,12 +12,14 @@ _Updated: 2026-10-20_
   (a second image at rest) and `trigger: 'scroll'`. Registry revision published 2026-10-20 (draft ca94b9e1, same
   component id, still `in_review`); the live preview develops on hover from 21st's CDN copies of
   the images (21st mirrored the literal Wikimedia URLs this time).
-  Media to upload by hand if 21st generates none: `registry-uploads/ink-reveal-demo.mp4` (20 s:
-  hover tour, then paired prints) and `registry-uploads/ink-reveal-cover.jpg` (4:3).
+  Demo video UPLOADED 2026-10-20 through the component page's Edit dialog (18 s, 4:3, hover tour then
+  paired prints; `docs/media/ink-reveal-demo.mp4`). Its controls panel is marked "Edited" and lacks
+  the new Paired toggle; "Reset to detected panel" would add it (Ryan's call).
 - **InkRidges**: draft `747554f3-9b19-4935-b0b2-b3d1e9d5f80c`, NOT published. 2026-10-20: painted
   sun that blooms last, `moon: 'auto'` on dark paper, vermilion default sun, brushed crests,
-  `scrollDepth` (far ridges lag, the sun sets on scroll). Draft updated 2026-10-20 with this source, description and cover. Video to upload
-  by hand: `registry-uploads/ink-ridges-demo.mp4` (22 s: paint-in, flock, sunset on scroll, moon).
+  `scrollDepth` (far ridges lag, the sun sets on scroll). Draft updated 2026-10-20 with this source, description and cover. A draft cannot
+  hold a video; after publishing, upload `docs/media/ink-ridges-demo.mp4` (16 s, 4:3: paint-in, flock,
+  sunset on scroll, moon) through the Edit dialog (memory: 21st-video-media).
   Editor: https://21st.dev/studio/ryanonline1234/sandbox/fo5UWTruZSQhFfdsghNWpN?source=cli
 - Verified 2026-10-20: 84 unit tests, typecheck, build, probes 58/58 (all four components); fresh Next.js 16 and
   Vite 8 projects build and run both (ridges 60 draws per 500 ms visible, 0 offscreen; paired card
