@@ -522,3 +522,14 @@ video went up through the component's Edit dialog right after publishing (a draf
 cannot hold one). 21st dropped the `landscape` tag (four of five tags kept),
 presumably because it is not one of its existing tags. The monthly metrics
 script now captures all four components.
+
+## 2026-10-20 — Preview controls: a TS cast in the demo settings hid them all
+After publishing, Ink Ridges' listing had no controls panel, while Ink Reveal
+and Ink Hero had theirs. The only difference: Ink Ridges' demo `settings` held
+`moon: 'auto' as 'auto' | boolean`. On Ryan's go the demo dropped `moon` (the
+component default 'auto' still shows the moon in dark mode) and went up as a
+revision of 22423. The listing now shows 15 controls. The revision dropped the
+uploaded video; it was re-uploaded through the Edit dialog. Ink Reveal's panel
+("Edited") was reset to the detected panel on Ryan's yes; its public preview
+now has the Paired toggle. Rule: demo settings objects hold plain literals
+only; casts go in the JSX.

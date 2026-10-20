@@ -13,12 +13,13 @@ _Updated: 2026-10-20_
   component id, still `in_review`); the live preview develops on hover from 21st's CDN copies of
   the images (21st mirrored the literal Wikimedia URLs this time).
   Demo video UPLOADED 2026-10-20 through the component page's Edit dialog (18 s, 4:3, hover tour then
-  paired prints; `docs/media/ink-reveal-demo.mp4`). Its controls panel is marked "Edited" and lacks
-  the new Paired toggle; "Reset to detected panel" would add it (Ryan's call).
+  paired prints; `docs/media/ink-reveal-demo.mp4`). Controls reset to the detected panel on Ryan's
+  yes: the public preview now has the Paired toggle.
 - **InkRidges** (22423): PUBLISHED 2026-10-20 on Ryan's go and submitted, `in_review`.
   https://21st.dev/@ryanonline1234/components/ink-ridges. Supplied 4:3 cover; demo video uploaded
   through the Edit dialog (16 s, `docs/media/ink-ridges-demo.mp4`). Live preview checked in both
-  themes (painted sun on light paper, moon on dark).
+  themes (painted sun on light paper, moon on dark). Revised the same night so the listing has
+  preview controls (15; the demo's settings had held a TS cast); video re-uploaded after it.
 - Verified 2026-10-20: 84 unit tests, typecheck, build, probes 58/58 (all four components); fresh Next.js 16 and
   Vite 8 projects build and run both (ridges 60 draws per 500 ms visible, 0 offscreen; paired card
   hovers to 1; scroll card 0.20 → 0.89 over 500 px; clean console); real-GPU timing in DECISIONS.
@@ -33,15 +34,10 @@ Featured component back into review. The InkHero revision draft 48e12df1 stays u
 untouched; the fixes live in this repo only. New components (InkRidges) go up as new drafts;
 publishing one still needs Ryan's go.
 
-1. **Revise InkRidges on 21st so its preview gets controls?** Its listing has NO controls panel
-   (Ink Reveal's has one, now with Paired after a reset on 2026-10-20). Likely cause: the demo's
-   settings object held a TS cast (`moon: 'auto' as 'auto' | boolean`), the only non-literal in any
-   of our demos; fixed in the repo (moon left to the component default). Rec: yes, publish the demo
-   as a revision of 22423 and re-check the video afterwards.
-2. **More InkRidges ideas** (not built): a lake with reflections; pine clusters on the near ridge;
+1. **More InkRidges ideas** (not built): a lake with reflections; pine clusters on the near ridge;
    weather; mist parting around the pointer. Rec: none now; ship what exists and watch metrics.
-3. Monthly metrics capture on 2026-11-01: `node scripts/capture-metrics.mjs` + Studio screenshot.
-4. Pause rule: a week without Terra's ten logged hours pauses ease-atlas.
+2. Monthly metrics capture on 2026-11-01: `node scripts/capture-metrics.mjs` + Studio screenshot.
+3. Pause rule: a week without Terra's ten logged hours pauses ease-atlas.
 
 ## Gotchas
 
