@@ -1,6 +1,7 @@
 'use client'
 
-import InkReveal, { type Origin, type Trigger } from '@/components/ui/ink-reveal'
+// A relative import: the 21st CLI rewrites it to wherever its build places the component file.
+import InkReveal, { type Origin, type Trigger } from '../../components/ui/ink-reveal'
 
 const settings = {
   trigger: 'hover',

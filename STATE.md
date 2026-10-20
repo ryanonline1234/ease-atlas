@@ -29,11 +29,14 @@ resubmit, withdraw, edit, or delete InkHero (20923) or EaseAtlas (20924).** A re
 Featured component back into review. The InkHero revision draft 48e12df1 stays unpublished and
 untouched; the fixes live in this repo only.
 
-1. Publish InkReveal and submit it for featuring. Rec: yes, after Ryan checks the draft.
-   `21st publish ./src/components/ui/ink-reveal.tsx --demo ./src/demos/ink-reveal/default.tsx --description "$(cat <desc>)" --tags image,hover,webgl,card,animation --preview ./.21st-review/ink-reveal-cover.jpg --draft draft:322ae250-0b96-46a2-afe5-69f855c798fd --auto --json`,
-   then `21st submit ink-reveal`. Description text: DECISIONS 2026-10-19 (248 characters).
-2. Swap ScrollScore for InkRidges as the fourth component. Rec: yes (visual, distinctive,
-   mostly written already in the hero's no-image mode).
+1. **InkReveal publish, in the review screen** (Ryan, signed in):
+   https://21st.dev/studio/ryanonline1234/sandbox/7ciD5APhFPFWmyKp4urNmV?source=cli
+   Upload the cover `.21st-review/ink-reveal-cover.jpg` and the video
+   `.21st-review/ink-reveal-demo.mp4` in the Demos step (the draft's own capture cannot load
+   Wikimedia images), confirm the gallery renders rather than a starter counter, then publish
+   and submit for featuring, or tell Claude to run `--draft draft:322ae250-0b96-46a2-afe5-69f855c798fd --auto --json`
+   and `21st submit ink-reveal`.
+2. **InkRidges is the fourth component** (Ryan, 2026-10-20). ScrollScore stays repo-only.
 3. Monthly metrics capture on 2026-11-01: `node scripts/capture-metrics.mjs` + Studio screenshot.
 4. Pause rule starts this week: a week without Terra's ten logged hours pauses ease-atlas.
 
@@ -45,6 +48,8 @@ untouched; the fixes live in this repo only.
 - Self-installs count. Test installs file-level in a scratch project, not with `21st add`.
 - `every()` on an empty list is true: readiness checks must assert the expected count first.
 - Long probe runs fail across a lid-closed sleep; check `pmset -g log` before debugging.
-- Registry auto-cover capture refuses demos that link off-origin; supply covers with `--preview`.
+- 21st's capture sandbox blocks every outside host: a demo that loads external images gets no
+  generated cover or video before publish. Supply the cover with `--preview`; record the video here.
+- Demos must import the component relatively (`../../components/ui/<file>`) so the CLI rewrites it.
 - Wikimedia serves `960px-`, `1280px-`, `1920px-` thumbs; `1600px-` is a 400.
 - Tailwind with the Vite root at `playground/` needs `@source "../src";`.

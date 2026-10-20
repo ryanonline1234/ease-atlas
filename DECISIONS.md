@@ -318,3 +318,28 @@ gaps (no 'use client', Vite erasableSyntaxOnly, transparent-paper color, silent
 blank on CORS-less images); the README now says the registry copy is the
 original release and points Next.js users to add 'use client' or take the
 repo's file.
+
+## 2026-10-20 — Why the InkReveal draft showed a counter and had no video
+Ryan opened the draft and saw a starter counter, and no video. Two causes found
+in 21st's pipeline, read from the CLI source and its server responses:
+1. The CLI rewrites a demo's import to wherever its build puts the component,
+   but only for relative imports or `@/components/ui/component`. The demo used
+   `@/components/ui/ink-reveal`, which only matches when the build slug equals
+   the file name; `21st render` uses a suffixed slug and failed to compile. The
+   demo now imports `../../components/ui/ink-reveal`, which works locally and
+   gets rewritten everywhere. Whether this alone explains the counter in Studio
+   is unverified; it needs Ryan's signed-in view.
+2. 21st's capture sandbox blocks every outside host ("Capture request left its
+   allowed origin"), so a demo that loads Wikimedia images cannot get a
+   generated cover or video before publishing. Images are copied to
+   cdn.21st.dev only at publish, which is how InkHero got its video later.
+   Correction to 2026-10-09: InkHero's auto-cover failed for this reason, not
+   because of the playground link.
+Also: the video generator only accepts a clip when a click, key press, typing
+or scroll changes what is visible, and hover is none of those. There is no CLI
+flag to attach a component video, and `21st profile upload` needs a secret API
+key. So the video is recorded here (`.21st-review/ink-reveal-demo.mp4`, 10 s,
+1280×720, the pointer entering each card from a different side) for Ryan to add
+in the review screen, along with the staged cover. Rejected: inlining the four
+images as data URIs to satisfy the sandbox (a 200 KB wall of base64 in every
+visitor's copied code).

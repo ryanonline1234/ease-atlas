@@ -88,6 +88,8 @@ dries.
 
 ## InkReveal
 
+![InkReveal: hovering each card blooms the ink from where the pointer enters](docs/ink-reveal.gif)
+
 An image that develops like ink soaking into paper. At rest the card holds a
 faint wash of the image; on hover the ink blooms from where the pointer came in,
 islands spreading with a tide line in the image's own tone, and it recedes when
