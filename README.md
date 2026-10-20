@@ -90,6 +90,8 @@ dries.
 
 ![InkReveal: hovering each card blooms the ink from where the pointer enters](docs/ink-reveal.gif)
 
+Full demo, with the paired prints: [docs/media/ink-reveal-demo.mp4](docs/media/ink-reveal-demo.mp4).
+
 An image that develops like ink soaking into paper. At rest the card holds a
 faint wash of the image, or a second image; on hover the ink blooms from where
 the pointer came in, islands spreading with a tide line in the image's own tone
@@ -138,6 +140,8 @@ four public-domain ink paintings by Hasegawa Tōhaku and Sesshū Tōyō.
 ## InkRidges
 
 ![InkRidges: a sumi-e mountain range brushes itself in, far ridge first, a small flock crosses above a far ridge, then it repaints from a new seed](docs/ink-ridges.gif)
+
+Full demo, with the sunset on scroll and the moon: [docs/media/ink-ridges-demo.mp4](docs/media/ink-ridges-demo.mp4).
 
 A sumi-e mountain range painted in front of you. Layered ridges, far to near,
 are each laid down with a brush sweep that presses hardest along the crest; the
