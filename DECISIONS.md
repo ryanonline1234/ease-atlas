@@ -377,3 +377,14 @@ recorded here; Ryan uploads them in the review screen. The review screen itself
 never rendered in Claude's browser pane (stuck on its skeleton; the network log
 showed it loading the draft's own demo file), so whether the starter counter
 Ryan saw is gone is unverified.
+
+## 2026-10-20 — InkReveal published at 1200 ms
+Ryan: "Go ahead and publish ink reveal maybe tune down the reveal speed a little
+bit." Develop time 900 → 1200 ms (receding 840 ms), still in the watching
+register. Published from draft 322ae250 with the supplied cover (component
+22319) and submitted: `in_review`. Findings: 21st copied InkHero's literal image
+URL to its CDN at publish but left InkReveal's template-built Wikimedia URLs
+alone, so no generated video is possible for it; the repo demo now spells every
+URL out for any future publish. The demo's import comment no longer matched the
+rewritten import in the registry copy; the repo comment now reads true in both.
+Neither warrants a revision while it is in review.

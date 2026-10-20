@@ -1,13 +1,13 @@
 'use client'
 
-// A relative import: the 21st CLI rewrites it to wherever its build places the component file.
+// 21st's CLI points this import at its own copy of the component when it publishes.
 import InkReveal, { type Origin, type Trigger } from '../../components/ui/ink-reveal'
 
 const settings = {
   trigger: 'hover',
   origin: 'pointer',
   ease: 'ink',
-  duration: 900,
+  duration: 1200,
   progress: 0.5,
   rest: 0.2,
   feather: 0.14,
@@ -16,34 +16,33 @@ const settings = {
   inkColor: '#1b1613',
 }
 
-const WIKI = 'https://upload.wikimedia.org/wikipedia/commons/thumb'
 const WORKS = [
   {
     slug: 'pine-trees-right',
     title: 'Pine Trees, right screen',
     by: 'Hasegawa Tōhaku, late 16th c.',
-    src: `${WIKI}/2/23/Hasegawa_Tohaku_-_Pine_Trees_%28Sh%C5%8Drin-zu_by%C5%8Dbu%29_-_right_hand_screen.jpg/960px-Hasegawa_Tohaku_-_Pine_Trees_%28Sh%C5%8Drin-zu_by%C5%8Dbu%29_-_right_hand_screen.jpg`,
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Hasegawa_Tohaku_-_Pine_Trees_%28Sh%C5%8Drin-zu_by%C5%8Dbu%29_-_right_hand_screen.jpg/960px-Hasegawa_Tohaku_-_Pine_Trees_%28Sh%C5%8Drin-zu_by%C5%8Dbu%29_-_right_hand_screen.jpg',
     alt: 'Pine trees emerging from mist, painted in ink on a folding screen',
   },
   {
     slug: 'splashed-ink-landscape',
     title: 'Splashed-ink landscape',
     by: 'Sesshū Tōyō, 1495',
-    src: `${WIKI}/2/27/Sesshu_-_Haboku-Sansui.jpg/960px-Sesshu_-_Haboku-Sansui.jpg`,
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Sesshu_-_Haboku-Sansui.jpg/960px-Sesshu_-_Haboku-Sansui.jpg',
     alt: 'A mountain landscape in loose splashed ink, with a building and a figure in a boat',
   },
   {
     slug: 'pine-trees-left',
     title: 'Pine Trees, left screen',
     by: 'Hasegawa Tōhaku, late 16th c.',
-    src: `${WIKI}/3/32/Hasegawa_Tohaku_-_Pine_Trees_%28Sh%C5%8Drin-zu_by%C5%8Dbu%29_-_left_hand_screen.jpg/960px-Hasegawa_Tohaku_-_Pine_Trees_%28Sh%C5%8Drin-zu_by%C5%8Dbu%29_-_left_hand_screen.jpg`,
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/Hasegawa_Tohaku_-_Pine_Trees_%28Sh%C5%8Drin-zu_by%C5%8Dbu%29_-_left_hand_screen.jpg/960px-Hasegawa_Tohaku_-_Pine_Trees_%28Sh%C5%8Drin-zu_by%C5%8Dbu%29_-_left_hand_screen.jpg',
     alt: 'Pine trees and a distant snowy peak in ink, from the left folding screen',
   },
   {
     slug: 'winter-landscape',
     title: 'Landscape of Four Seasons: Winter',
     by: 'attributed to Sesshū Tōyō, 15th c.',
-    src: `${WIKI}/e/ea/Sesshu_Toyo_-_Landscape_of_four_seasons-_winter_-_Google_Art_Project.jpg/960px-Sesshu_Toyo_-_Landscape_of_four_seasons-_winter_-_Google_Art_Project.jpg`,
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Sesshu_Toyo_-_Landscape_of_four_seasons-_winter_-_Google_Art_Project.jpg/960px-Sesshu_Toyo_-_Landscape_of_four_seasons-_winter_-_Google_Art_Project.jpg',
     alt: 'A winter landscape in ink: cliffs, bare trees and a temple roof under snow',
   },
 ]

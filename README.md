@@ -123,7 +123,7 @@ four public-domain ink paintings by Hasegawa Tōhaku and Sesshū Tōyō.
 | `progress` | `0` | 0–1, followed exactly when `trigger` is `'manual'` |
 | `origin` | per trigger | `'pointer'` (hover), `'bottom'` (inView), `'center'` (manual), or `'top'`, `'left'`, `'right'` |
 | `ease` | `'ink'` | Any atlas curve name, a `cubic-bezier()` string, or `'linear'` |
-| `duration` | `900` | Develop time in ms; receding takes 70% of it |
+| `duration` | `1200` | Develop time in ms; receding takes 70% of it |
 | `rest` | `0.2` | How much of the image shows at rest, 0 to 1 |
 | `feather` | `0.14` | Edge softness: lower is grittier ink, higher is fog |
 | `grain` | `0.3` | Paper grain |

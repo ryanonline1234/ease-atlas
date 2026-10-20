@@ -29,16 +29,13 @@ resubmit, withdraw, edit, or delete InkHero (20923) or EaseAtlas (20924).** A re
 Featured component back into review. The InkHero revision draft 48e12df1 stays unpublished and
 untouched; the fixes live in this repo only.
 
-1. **Publish InkReveal and InkRidges, from each draft's review screen** (Ryan, signed in).
-   21st generates no video for either (status "skipped"; InkReveal's capture also cannot load the
-   Wikimedia images), so upload ours from `registry-uploads/` (gitignored):
-   - InkReveal, draft 322ae250: https://21st.dev/studio/ryanonline1234/sandbox/7ciD5APhFPFWmyKp4urNmV?source=cli
-     cover `ink-reveal-cover.jpg` (its status shows failed; upload it), video `ink-reveal-demo.mp4` (10 s).
-   - InkRidges, draft 747554f3: https://21st.dev/studio/ryanonline1234/sandbox/fo5UWTruZSQhFfdsghNWpN?source=cli
-     cover `ink-ridges-cover.jpg` (status ready; confirm it is ours and not 21st's zoomed crop), video
-     `ink-ridges-demo.mp4` (16 s).
-   Confirm each preview shows the component, not a starter counter. Then publish and submit for
-   featuring there, or tell Claude to run `--draft <id> --auto --json` and `21st submit <slug>`.
+1. **InkReveal PUBLISHED 2026-10-20** (component 22319, `in_review` after `21st submit`), develop
+   time 1200 ms. https://21st.dev/@ryanonline1234/components/ink-reveal
+   No video: 21st kept the Wikimedia URLs (it did not copy template-built URLs to its CDN), so its
+   capture still cannot record the demo. Ryan can add `registry-uploads/ink-reveal-demo.mp4` (12 s)
+   from the component page's Edit menu (media); whether a media edit during review matters is
+   unknown. Under the freeze rule, InkReveal is now live: no code revisions while it is in review.
+   **InkRidges**: draft 747554f3 held; Ryan asked for a reworked sky and occasional birds first.
 2. **InkRidges** built and verified 2026-10-20 (`src/components/ui/ink-ridges.tsx`, demo
    `src/demos/ink-ridges/default.tsx`, playground `?demo=ink-ridges`): probe 8/8 (stable across 3
    reruns after a polled repaint check), positive control on the frame gating, fresh Next.js 16 and

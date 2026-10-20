@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-// A relative import: the 21st CLI rewrites it to wherever its build places the component file.
+// 21st's CLI points this import at its own copy of the component when it publishes.
 import InkRidges from '../../components/ui/ink-ridges'
 
 const settings = {

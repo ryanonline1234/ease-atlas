@@ -523,7 +523,7 @@ export interface InkRevealProps {
   origin?: Origin
   /** A NAMED_CURVES key ('ink', 'lusion', 'expo.out', …), a cubic-bezier() string, or 'linear'. */
   ease?: string
-  /** Develop time in ms; receding takes 70% of it. The viewer is watching, so 700–1200 reads right. */
+  /** Develop time in ms (default 1200); receding takes 70% of it. The viewer is watching, so 900–1400 reads right. */
   duration?: number
   /** How much of the image shows at rest, 0 (blank paper) to 1. */
   rest?: number
@@ -553,7 +553,7 @@ export default function InkReveal({
   progress = 0,
   origin,
   ease = 'ink',
-  duration = 900,
+  duration = 1200,
   rest = 0.2,
   feather = 0.14,
   grain = 0.3,
