@@ -4,8 +4,8 @@ _Updated: 2026-10-19_
 
 ## Now
 
-- **InkHero** (20923): Featured on 21st.dev. Install-fix revision built and verified in the
-  repo (2026-10-13), not yet on the registry. The planned publish date was today.
+- **InkHero** (20923): Featured on 21st.dev, frozen there by Ryan's rule (below). The install
+  fixes from 2026-10-13 live in the repo and playground only; the README says so.
 - **EaseAtlas** (20924): `needs_changes`, not pursued. Published by link only.
 - **InkReveal**: built and verified 2026-10-19, not on the registry.
   `src/components/ui/ink-reveal.tsx`, demo `src/demos/ink-reveal/default.tsx`, playground
@@ -24,16 +24,18 @@ _Updated: 2026-10-19_
 
 ## Next (Ryan's decisions, each with a rec)
 
-1. (done: login works again)
-2. Publish InkReveal and submit it for featuring. Rec: yes. Run the same `21st publish` line
-   with `--draft draft:322ae250-0b96-46a2-afe5-69f855c798fd --auto --json`, then `21st submit ink-reveal`.
-3. Publish the InkHero revision (today was the planned date). Rec: yes. Draft 48e12df1 is still
-   active: `--draft draft:48e12df1-8efe-486f-b72a-b50e2d67e20c --auto --json`, then confirm status
-   and `21st resubmit ink-hero` if it dropped to review.
-4. Swap ScrollScore for InkRidges as the fourth component. Rec: yes (visual, distinctive,
+**Rule (Ryan, 2026-10-19): on 21st.dev, publish or update only InkReveal. Never revise,
+resubmit, withdraw, edit, or delete InkHero (20923) or EaseAtlas (20924).** A revision sends a
+Featured component back into review. The InkHero revision draft 48e12df1 stays unpublished and
+untouched; the fixes live in this repo only.
+
+1. Publish InkReveal and submit it for featuring. Rec: yes, after Ryan checks the draft.
+   `21st publish ./src/components/ui/ink-reveal.tsx --demo ./src/demos/ink-reveal/default.tsx --description "$(cat <desc>)" --tags image,hover,webgl,card,animation --preview ./.21st-review/ink-reveal-cover.jpg --draft draft:322ae250-0b96-46a2-afe5-69f855c798fd --auto --json`,
+   then `21st submit ink-reveal`. Description text: DECISIONS 2026-10-19 (248 characters).
+2. Swap ScrollScore for InkRidges as the fourth component. Rec: yes (visual, distinctive,
    mostly written already in the hero's no-image mode).
-5. Monthly metrics capture on 2026-11-01: `node scripts/capture-metrics.mjs` + Studio screenshot.
-6. Pause rule starts this week: a week without Terra's ten logged hours pauses ease-atlas.
+3. Monthly metrics capture on 2026-11-01: `node scripts/capture-metrics.mjs` + Studio screenshot.
+4. Pause rule starts this week: a week without Terra's ten logged hours pauses ease-atlas.
 
 ## Gotchas
 

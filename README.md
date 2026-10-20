@@ -11,11 +11,16 @@ npx @21st-dev/cli add @ryanonline1234/ink-hero
 ```
 
 What you need: React 19 and Tailwind v4; `gsap` and `@gsap/react` are installed
-for you. The 21st CLI asks for a free 21st.dev API key. Works as-is in Next.js
-App Router (it is a Client Component) and in Vite. shadcn/ui theme tokens are
-recommended, not required. A cross-origin image needs CORS headers for the
-dissolve, otherwise it is shown with a plain frame; with no image at all the
-dissolve paints ink ridges.
+for you. The 21st CLI asks for a free 21st.dev API key.
+
+The registry copy is the original Featured release and stays as published. The
+file in this repo, [`src/components/ui/ink-hero.tsx`](src/components/ui/ink-hero.tsx),
+adds fixes found in a cold install test: it is a Client Component, so it works
+as-is in Next.js App Router (with the registry copy, add `'use client'` as the
+first line); it builds under Vite's default TypeScript settings; it reads the
+paper color correctly without shadcn/ui theme tokens; a cross-origin image
+without CORS headers is shown in a plain frame instead of leaving the hero
+blank; and with no image at all the dissolve paints ink ridges.
 
 Part of a small set of web-motion primitives for React built on measured
 easing constants rather than invented ones. EaseAtlas, the curve instrument,

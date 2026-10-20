@@ -306,3 +306,15 @@ InkReveal cover (`.21st-review/ink-reveal-cover.jpg`, four develop stages
 composited) and description are ready.
 Update, same day: the login worked again a few hours later; the InkReveal draft
 (322ae250) was prepared with the composited cover and is held for Ryan's review.
+
+## 2026-10-19 — Freeze what is live on 21st.dev; only InkReveal goes up
+Ryan: "don't revise ink hero since it puts it back into review, if you
+republish/update on 21stdev, only ink reveal no longer tamper with what we have
+out there." InkHero (Featured) and EaseAtlas (needs_changes) are frozen on the
+registry: no revision, metadata edit, resubmit, withdraw, or delete. This
+supersedes the 2026-10-13 plan to publish the InkHero revision on October 19.
+Draft 48e12df1 is left unpublished. The registry copy of InkHero keeps its known
+gaps (no 'use client', Vite erasableSyntaxOnly, transparent-paper color, silent
+blank on CORS-less images); the README now says the registry copy is the
+original release and points Next.js users to add 'use client' or take the
+repo's file.
