@@ -14,7 +14,7 @@ const settings = {
   paintIn: 2600,
   sun: true,
   sunColor: '#b5402a',
-  // 'auto' paints a pale moon instead of the sun on dark paper
+  // 'auto' paints a pale moon instead of the sun on dark paper; true or false forces one or the other
   moon: 'auto' as 'auto' | boolean,
   scrollDepth: 0.35,
   glow: 0.45,
