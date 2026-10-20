@@ -557,3 +557,12 @@ The lake with reflections, as its own component (Ryan's meaning), would be a
 sixth component, so it is the first candidate for a second set. K6 allows a
 second set only after K3 (2026-12-19) and K4 (2027-01-18) pass. The thresholds
 stay fixed.
+
+## 2026-10-20 — Freeze extended to every Featured component; InkHeadline design
+Ryan: "go with recs" on:
+1. Name: InkHeadline.
+2. Default rhythm: word by word, with line-by-line and all-at-once as options.
+3. Ending: hand off to the real text.
+4. Triggers: in view by default, plus scroll and manual.
+5. Freeze: Ink Reveal and Ink Ridges join Ink Hero. No revisions while Featured, since a revision
+   sends a component back into review.

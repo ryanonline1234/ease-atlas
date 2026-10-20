@@ -33,8 +33,10 @@ below 22 / 5), **K4 outside signal on 2027-01-18**. npm and a second set wait fo
 
 ## Next (Ryan's decisions, each with a rec)
 
-**Rule (Ryan, 2026-10-19): on 21st.dev, publish or update only InkReveal. Never revise,
-resubmit, withdraw, edit, or delete InkHero (20923) or EaseAtlas (20924).** A revision sends a
+**Rule (Ryan, 2026-10-19; extended 2026-10-20): on 21st.dev, never revise, resubmit, withdraw, edit,
+or delete a Featured component: InkHero (20923), InkReveal (22319), InkRidges (22423). EaseAtlas
+(20924) stays untouched too.** Media-only edits through the Edit dialog were done before the freeze
+was extended; even those wait for Ryan's go now. A revision sends a
 Featured component back into review. The InkHero revision draft 48e12df1 stays unpublished and
 untouched; the fixes live in this repo only. New components (InkRidges) go up as new drafts;
 publishing one still needs Ryan's go.
