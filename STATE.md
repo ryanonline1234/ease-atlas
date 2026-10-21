@@ -45,7 +45,7 @@ publishing one still needs Ryan's go.
    `src/demos/ink-headline/default.tsx`, playground `?demo=ink-headline`; 17 unit tests, 7 probes,
    fresh Next 16 + Vite 8, 21st sandbox render). Cover `registry-uploads/ink-headline-cover.jpg` (4:3),
    video `docs/media/ink-headline-demo.mp4` (11 s, 4:3, light then dark). Rec: yes after Ryan looks;
-   publish from the prepared draft, `21st submit ink-headline`, then upload the video through the Edit
+   publish from the prepared draft `1e2382df-5975-4d4f-8332-37266e0f5f08` (`--draft draft:<id> --no-push --auto`), `21st submit ink-headline`, then upload the video through the Edit
    dialog (memory: 21st-video-media). New component, so the Featured freeze does not apply.
 2. **InkLake** (a lake with reflections, its own component): first in line for a second set, which K6
    allows only after K3 (2026-12-19) and K4 (2027-01-18) pass. Not built or published before then.
