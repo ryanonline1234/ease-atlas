@@ -631,3 +631,9 @@ then fade, also the effect should take like 2x as long", then "also maybe a diff
   - Every rounding rule gave identical results at a ratio of 2, because Skia snaps horizontal text
     baselines to whole device rows. The remaining gap's cause is not isolated. Left as is: a
     sub-pixel settle on a Retina screen at the handoff frame is not visible.
+
+## 2026-10-20 — InkHeadline published (23095)
+Ryan: "Go head and publish InkHeadline". Published from draft 1e2382df with the supplied cover
+(`--no-push --auto`), then `21st submit ink-headline` → `in_review`. All five slots of the set are now
+on 21st: three Featured, Ease Atlas `needs_changes`, InkHeadline in review. The demo video goes up
+through the Edit dialog once the browser pane is signed in again.

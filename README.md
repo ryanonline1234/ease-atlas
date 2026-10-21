@@ -357,7 +357,7 @@ always share the same stops.
    not pursued).
 3. **InkReveal**: Featured on 21st.dev.
 4. **InkRidges**: Featured on 21st.dev (replaces ScrollScore, which stays an internal helper).
-5. **InkHeadline**: built; a headline that inks into the paper word by word, then hands off to the real text. Replaces MaskReveal (2026-10-20).
+5. **InkHeadline**: published on 21st.dev, in review; a headline that inks into the paper word by word, then hands off to the real text. Replaces MaskReveal (2026-10-20).
 
 ## Non-negotiables
 

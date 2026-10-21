@@ -23,6 +23,7 @@ _Updated: 2026-10-20_
 - Verified 2026-10-20: 84 unit tests, typecheck, build, probes 58/58 (all four components); fresh Next.js 16 and
   Vite 8 projects build and run both (ridges 60 draws per 500 ms visible, 0 offscreen; paired card
   hovers to 1; scroll card 0.20 → 0.89 over 500 px; clean console); real-GPU timing in DECISIONS.
+- **InkHeadline** (23095): published 2026-10-20, `in_review`.
 - InkHero revision draft `48e12df1-8efe-486f-b72a-b50e2d67e20c` stays active and untouched.
 - Playground: https://ease-atlas.vercel.app (git-connected: a push to main deploys).
 
@@ -41,16 +42,10 @@ Featured component back into review. The InkHero revision draft 48e12df1 stays u
 untouched; the fixes live in this repo only. New components (InkRidges) go up as new drafts;
 publishing one still needs Ryan's go.
 
-1. **Publish InkHeadline?** BUILT, then retuned 2026-10-20 on Ryan's notes: bleed with a fading
-   outline, twice as long (1.8 s a word, 240 ms apart), open type, Shippori Mincho in the demo (Google
-   Fonts, system Mincho fallbacks). Verified: unit tests, probes (ink-to-text alignment exact at a device
-   pixel ratio of 1 at four widths; within one device pixel at 2). Cover `registry-uploads/ink-headline-cover.jpg`,
-   video `docs/media/ink-headline-demo.mp4` (10 s, 4:3, light then dark). 21st's sandbox can no longer
-   capture the demo (the font is an outside request); covers are supplied anyway, as for Ink Reveal.
-   Draft `1e2382df-5975-4d4f-8332-37266e0f5f08` (`--draft draft:<id> --no-push --auto`), then
-   `21st submit ink-headline`, then the video through the Edit dialog (memory: 21st-video-media).
-   Rec: publish after Ryan looks at `?demo=ink-headline`. New component, so the Featured freeze does
-   not apply.
+1. **InkHeadline PUBLISHED 2026-10-20** on Ryan's go (component 23095, submitted, `in_review`):
+   https://21st.dev/@ryanonline1234/components/ink-headline. Video still to upload through the Edit dialog
+   (`docs/media/ink-headline-demo.mp4`); the browser pane was signed out after the session restarted, so
+   it waits for Ryan to sign in there. Once Featured, it joins the freeze.
 2. **InkLake** (a lake with reflections, its own component): first in line for a second set, which K6
    allows only after K3 (2026-12-19) and K4 (2027-01-18) pass. Not built or published before then.
 3. Monthly metrics capture on 2026-11-01: `node scripts/capture-metrics.mjs` + Studio screenshot.
