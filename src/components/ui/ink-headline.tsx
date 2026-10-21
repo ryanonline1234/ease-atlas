@@ -82,12 +82,13 @@ export function resolveEase(value: string): EaseFn {
 }
 
 /**
- * Default gap between units: 120 ms between words (the sumi-e cluster rhythm) and
- * 180 ms between lines (sumi-e's masked poem lines), from the awwwards-motion stagger table.
+ * Default gap between units: 240 ms between words and 360 ms between lines. Twice the sumi-e
+ * cluster (120 ms) and poem-line (180 ms) staggers from the awwwards-motion table, because the
+ * whole effect runs at twice the pace (DECISION, Ryan 2026-10-20: "the effect should take like 2x as long").
  */
-export const DEFAULT_STAGGER: Record<By, number> = { word: 120, line: 180, all: 0 }
+export const DEFAULT_STAGGER: Record<By, number> = { word: 240, line: 360, all: 0 }
 /** The cascade never spreads over more than this, however many words (fix the total, not each gap). */
-export const MAX_SPREAD = 1200
+export const MAX_SPREAD = 2400
 
 /** The gap actually used for n units: the asked-for gap, shrunk so the cascade fits MAX_SPREAD. */
 export function effectiveStagger(stagger: number, n: number): number {
@@ -285,9 +286,10 @@ void main() {
 // Authored here. The mask holds the heading's glyphs (r) and each word's unit
 // index + 1 filled over its box (g). Per unit, an fbm field leaning on the
 // position across the unit's span (reading order) is thresholded into a soaking
-// front with a pooled band; while wet, ink reaches past the glyph into a
-// mip-blurred halo and along ridged-noise fibers, then dries back to the
-// glyph. Output is premultiplied ink in the heading's color, faded out as the
+// front with a pooled band. Past the glyph, a mip-blurred copy of the mask with
+// ragged noise is thresholded at a level that falls as the word wets, so the ink
+// bleeds outward; the bleed's edge pools into a darker outline, and both fade as
+// the ink dries, thinning toward the edge of the unit's tile. Output is premultiplied ink in the heading's color, faded out as the
 // real text fades in.
 const FRAG = `#version 300 es
 precision highp float;
@@ -297,6 +299,7 @@ uniform sampler2D uMask;
 uniform vec2 uResolution;
 uniform float uUnits[64];
 uniform vec2 uSpan[64];
+uniform vec4 uTile[64];
 uniform float uFeather;
 uniform float uBleed;
 uniform float uNoiseScale;
@@ -367,26 +370,35 @@ void main() {
   float wetTone = 0.8 + 0.15 * band + 0.06 * (vnoise(q * 40.0) - 0.5);
   float inLetter = glyph * front * mix(wetTone, 1.0, settle);
 
-  // past the letter, while wet: the edge feathers outward raggedly and pulls back as the ink dries,
-  // with a few fibers right at the edge
-  float soft = textureLod(uMask, vUv, uLod).r; // blurred coverage: about 0.5 on the edge, falling away outside
-  float wet = smoothstep(0.0, 0.3, p) * (1.0 - smoothstep(0.5, 0.85, p));
-  float rag = (fbm(q * 7.0 + unit * 1.3) - 0.5) * 0.28;
-  float level = mix(0.5, 0.2, wet * uBleed);
-  float spread = smoothstep(level - 0.05, level + 0.05, soft + rag) * (1.0 - glyph);
-  float nearEdge = smoothstep(0.1, 0.32, soft) * (1.0 - glyph);
-  float outLetter = (spread * 0.6 + nearEdge * fib * mix(0.3, 0.12, dark) * uBleed) * front * wet;
+  // past the letter: the wet ink bleeds out into the paper and its spreading edge pools into a dark
+  // outline; then the bleed and its outline fade as the ink dries, leaving the letter
+  float soft = textureLod(uMask, vUv, uLod + 1.0).r; // blurred coverage: about 0.5 on the edge, falling away outside
+  float rag = (fbm(q * 6.0 + unit * 1.3) - 0.5) * 0.22;
+  float grow = 1.0 - pow(1.0 - clamp(p / 0.45, 0.0, 1.0), 2.0);
+  float level = mix(0.48, 0.15, grow * uBleed);
+  float s = soft + rag;
+  float bled = smoothstep(level - 0.025, level + 0.025, s) * (1.0 - glyph);
+  float rim = bled * (1.0 - smoothstep(level + 0.02, level + 0.11, s));
+  float fade = smoothstep(0.0, 0.06, p) * (1.0 - smoothstep(0.45, 0.82, p));
+  // thin out toward the edge of this word's tile, so a neighbour's tile never cuts the bleed off straight
+  vec4 tile = uTile[k];
+  vec2 px = vUv * uResolution;
+  float edgeDist = min(min(px.x - tile.x, tile.z - px.x), min(px.y - tile.y, tile.w - px.y));
+  float keep = smoothstep(0.0, uEm * 0.12, edgeDist);
+  float outLetter = (bled * 0.14 + rim * mix(0.62, 0.36, dark) + rim * fib * mix(0.25, 0.08, dark)) * front * fade * keep;
 
   float a = clamp(inLetter + outLetter, 0.0, 1.0);
   fragColor = vec4(uInk * a, a);
 }`
 
-const UNIFORMS = ['uMask', 'uResolution', 'uUnits', 'uSpan', 'uFeather', 'uBleed', 'uNoiseScale', 'uEm', 'uLod', 'uHandoff', 'uInk'] as const
+const UNIFORMS = ['uMask', 'uResolution', 'uUnits', 'uSpan', 'uTile', 'uFeather', 'uBleed', 'uNoiseScale', 'uEm', 'uLod', 'uHandoff', 'uInk'] as const
 
 interface DrawUniforms {
   units: Float32Array
   /** per unit, its left and right edge across the canvas (0–1) */
   spans: Float32Array
+  /** per unit, the union of its words' tiles in device px, y from the bottom (x0, y0, x1, y1) */
+  tiles: Float32Array
   feather: number
   bleed: number
   noiseScale: number
@@ -527,6 +539,7 @@ class InkSurface {
     gl.uniform2f(L('uResolution'), W, H)
     gl.uniform1fv(L('uUnits'), u.units)
     gl.uniform2fv(L('uSpan'), u.spans)
+    gl.uniform4fv(L('uTile'), u.tiles)
     gl.uniform1f(L('uFeather'), u.feather)
     gl.uniform1f(L('uBleed'), u.bleed)
     gl.uniform1f(L('uNoiseScale'), u.noiseScale)
@@ -602,13 +615,17 @@ export interface InkHeadlineProps {
   progress?: number
   /** What inks in together: each 'word' (default), each 'line', or 'all' at once. */
   by?: By
-  /** Time for one word (or line) to soak in, in ms. Default 900. */
+  /** Time for one word (or line) to soak in, bleed and dry, in ms. Default 1800. */
   duration?: number
-  /** Gap between words (or lines) in ms. Defaults: 120 between words, 180 between lines; the whole cascade is capped at 1.2 s. */
+  /** Gap between words (or lines) in ms. Defaults: 240 between words, 360 between lines; the whole cascade is capped at 2.4 s. */
   stagger?: number
-  /** A NAMED_CURVES key ('ink', 'osmo', 'expo.out', …), a cubic-bezier() string, or 'linear'. */
+  /**
+   * How each word's time maps to its progress: 'linear' (default), a NAMED_CURVES key ('ink', 'osmo', …) or a
+   * cubic-bezier() string. Linear by default because the soak, bleed and fade carry their own curves; an
+   * in-out curve squeezes them into the middle of the word's time.
+   */
   ease?: string
-  /** How far wet ink wicks past the letters, 0–1. 0 keeps it inside them. */
+  /** How far wet ink bleeds past the letters before it dries back, 0–1. 0 keeps it inside them. */
   bleed?: number
   /** Softness of the soaking front, 0.02–0.4. */
   feather?: number
@@ -629,9 +646,9 @@ export default function InkHeadline({
   trigger = 'inView',
   progress = 0,
   by = 'word',
-  duration = 900,
+  duration = 1800,
   stagger,
-  ease = 'ink',
+  ease = 'linear',
   bleed = 0.6,
   feather = 0.12,
   noiseScale = 2.2,
@@ -716,6 +733,7 @@ export default function InkHeadline({
     let ink: RGB = [0.1, 0.1, 0.1]
     const unitsBuf = new Float32Array(MAX_UNITS)
     const spansBuf = new Float32Array(MAX_UNITS * 2)
+    const tilesBuf = new Float32Array(MAX_UNITS * 4)
     let dpr = 1
     let dead = false
 
@@ -732,12 +750,16 @@ export default function InkHeadline({
       margin = Math.ceil(em * 0.35)
       const box = root.getBoundingClientRect()
       dpr = Math.min(window.devicePixelRatio || 1, dprCap)
-      const cssW = box.width + margin * 2
-      const cssH = box.height + margin * 2
-      W = Math.max(1, Math.min(4096, Math.round(cssW * dpr)))
-      H = Math.max(1, Math.min(4096, Math.round(cssH * dpr)))
-      canvas.style.left = `${-margin}px`
-      canvas.style.top = `${-margin}px`
+      // Put the canvas's origin exactly on a device pixel, so its bitmap maps 1:1 onto the screen and is
+      // never resampled part of a pixel off; ox, oy are that origin in page px.
+      const ox = Math.floor((box.left - margin) * dpr) / dpr
+      const oy = Math.floor((box.top - margin) * dpr) / dpr
+      W = Math.max(1, Math.min(4096, Math.ceil((box.right + margin) * dpr - ox * dpr)))
+      H = Math.max(1, Math.min(4096, Math.ceil((box.bottom + margin) * dpr - oy * dpr)))
+      const cssW = W / dpr
+      const cssH = H / dpr
+      canvas.style.left = `${ox - box.left}px`
+      canvas.style.top = `${oy - box.top}px`
       canvas.style.width = `${cssW}px`
       canvas.style.height = `${cssH}px`
       canvas.width = W
@@ -751,8 +773,6 @@ export default function InkHeadline({
       const lines = groupLines(rects.map((r) => r.top), lineHeight)
       s.units = unitsFor(opts.current.by, lines)
       s.n = s.units.length ? Math.max(...s.units) + 1 : 0
-      const ox = box.left - margin
-      const oy = box.top - margin
       const pad = em * 0.3
       // Every pixel belongs to exactly one word: lines split where their boxes overlap, words split
       // halfway across the space between them. Opaque, whole-pixel fills, so no index is ever blended.
@@ -763,29 +783,54 @@ export default function InkHeadline({
       const tiles = wordTiles(rects.map((r) => [r.left - ox, r.top - oy, r.right - ox, r.bottom - oy]), lines, pad, cssW, cssH)
       spansBuf.fill(0)
       for (let k = 0; k < MAX_UNITS; k++) spansBuf[k * 2] = 1
+      tilesBuf.fill(0)
+      for (let k = 0; k < MAX_UNITS; k++) {
+        tilesBuf[k * 4] = Infinity
+        tilesBuf[k * 4 + 1] = Infinity
+        tilesBuf[k * 4 + 2] = -Infinity
+        tilesBuf[k * 4 + 3] = -Infinity
+      }
       tiles.forEach(([x0, y0, x1, y1], i) => {
         const u = s.units[i] ?? 0
         const X0 = Math.round(x0 * dpr)
         const Y0 = Math.round(y0 * dpr)
+        const X1 = Math.round(x1 * dpr)
+        const Y1 = Math.round(y1 * dpr)
         m.fillStyle = `rgb(0,${u + 1},0)`
-        m.fillRect(X0, Y0, Math.round(x1 * dpr) - X0, Math.round(y1 * dpr) - Y0)
+        m.fillRect(X0, Y0, X1 - X0, Y1 - Y0)
+        // the shader's y runs up from the bottom
+        tilesBuf[u * 4] = Math.min(tilesBuf[u * 4]!, X0)
+        tilesBuf[u * 4 + 1] = Math.min(tilesBuf[u * 4 + 1]!, H - Y1)
+        tilesBuf[u * 4 + 2] = Math.max(tilesBuf[u * 4 + 2]!, X1)
+        tilesBuf[u * 4 + 3] = Math.max(tilesBuf[u * 4 + 3]!, H - Y0)
         const r = rects[i]!
         spansBuf[u * 2] = Math.min(spansBuf[u * 2]!, (r.left - ox) / cssW)
         spansBuf[u * 2 + 1] = Math.max(spansBuf[u * 2 + 1]!, (r.right - ox) / cssW)
       })
-      m.setTransform(dpr, 0, 0, dpr, 0, 0)
+      // Text is drawn in device pixels at the device font size, the way the page rasterizes it.
+      m.setTransform(1, 0, 0, 1, 0, 0)
       m.globalCompositeOperation = 'lighter'
       m.fillStyle = 'rgb(255,0,0)'
-      m.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
+      m.font = `${cs.fontStyle} ${cs.fontWeight} ${parseFloat(cs.fontSize) * dpr}px ${cs.fontFamily}`
       const lsp = cs.letterSpacing
-      if ('letterSpacing' in m) (m as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = lsp === 'normal' ? '0px' : lsp
+      if ('letterSpacing' in m) (m as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = lsp === 'normal' ? '0px' : `${parseFloat(lsp) * dpr}px`
       m.fontKerning = 'normal'
       m.textBaseline = 'alphabetic'
+      // Each word's baseline, from the layout itself: a zero-size inline-block sits on the baseline, so its
+      // top is it. The markers go in and out within this one synchronous build, before any paint.
+      const markers = words.map((el) => {
+        const mk = document.createElement('span')
+        mk.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline'
+        el.appendChild(mk)
+        return mk
+      })
+      const baselines = markers.map((mk) => mk.getBoundingClientRect().top)
+      markers.forEach((mk) => mk.remove())
       words.forEach((el, i) => {
         const r = rects[i]!
         const text = applyTransform(el.textContent ?? '', cs.textTransform)
-        const asc = m.measureText(text).fontBoundingBoxAscent || em * 0.8
-        m.fillText(text, r.left - ox, r.top - oy + asc)
+        // horizontal text lands on whole device rows; ox, oy sit on whole device pixels too
+        m.fillText(text, (r.left - ox) * dpr, Math.round(baselines[i]! * dpr) - oy * dpr)
       })
       m.setTransform(1, 0, 0, 1, 0, 0)
       surf.upload(id, mask)
@@ -821,6 +866,7 @@ export default function InkHeadline({
       surf.draw(id, ctx, W, H, {
         units: unitsBuf,
         spans: spansBuf,
+        tiles: tilesBuf,
         feather: o.feather,
         bleed: clamp01(o.bleed),
         noiseScale: o.noiseScale,
@@ -838,7 +884,10 @@ export default function InkHeadline({
       cancelAnimationFrame(rebuildRaf)
       rebuildRaf = requestAnimationFrame(build)
     }
-    document.fonts?.ready.then(() => {
+    // wait for the heading's own face too, so a web font that is still loading is not swapped in mid-reveal
+    const hcs = getComputedStyle(root)
+    const face = `${hcs.fontStyle} ${hcs.fontWeight} ${hcs.fontSize} ${hcs.fontFamily}`
+    Promise.all([document.fonts?.ready, document.fonts?.load(face).catch(() => [])]).then(() => {
       build()
       if (s.pending) {
         s.pending = false

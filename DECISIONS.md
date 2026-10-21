@@ -598,3 +598,36 @@ Ryan: "go with recs" on:
   - Fresh Next.js 16 (text present in the server HTML) and Vite 8 projects: inks in, every word ends
     visible, the canvas ends hidden, clean console.
   - 21st's sandbox renders it.
+
+## 2026-10-20 — InkHeadline retuned: bleed with a fading outline, twice as long, open type, Shippori Mincho
+Ryan: "I want the text to be more spread apart, bleed in as if ink onto paper and have the ink outline
+then fade, also the effect should take like 2x as long", then "also maybe a different font?".
+- **Bleed and outline:** past each letter, a mip-blurred copy of the mask with ragged noise is
+  thresholded at a level that falls over the first 45% of the word's time, so the ink spreads
+  outward. A band just inside the bleed's edge is the outline where ink pools. Both fade from 45% to
+  82%, and the letter is solid by the handoff at 90%. Each unit's tile rect goes to the shader so the
+  bleed thins toward the tile edge instead of being cut straight by a neighbour's tile. Fibers stay
+  faint and only on the outline.
+- **Twice as long:** 1800 ms per word, 240 ms between words, 360 ms between lines, cascade capped at
+  2.4 s. The default per-word curve became linear: with the ink in-out curve, each stage's own
+  shaping got squeezed into about 0.7 s of the 1.8 s, and the rest was invisible tails.
+- **Spread apart:** read as the type. The demo opens the letter spacing (0.03em), word spacing
+  (+0.12em) and leading (1.2). If Ryan meant the timing between words, the stagger is the knob.
+- **Font:** six faces compared mid-bleed and finished (default serif, Cormorant Garamond, Shippori
+  Mincho, Instrument Serif, EB Garamond, Fraunces). Shippori Mincho 500 is a Mincho face drawn from
+  brush calligraphy, so it belongs to the sumi-e set; its thick stems and fine hairlines show the
+  bleed best. Runner-up: Cormorant Garamond (elegant, but thin strokes show less ink). The demo loads
+  it from Google Fonts through a React 19 hoisted `<link>`. The component now waits for the heading's
+  own face (`document.fonts.load`) before its first build, so a loading web font is never swapped in
+  mid-reveal.
+- **Alignment, now at the device-pixel level:**
+  - The open leading put line two at a fractional offset, and the probe caught the drawn ink sitting
+    half a pixel low.
+  - Fixes: the canvas origin is pinned to a whole device pixel (so its bitmap is never resampled);
+    baselines come from the layout itself (a zero-size inline-block on each word's baseline, inserted
+    and removed in the same build); text is drawn at the device font size.
+  - Measured: exact (0.00% mismatched inked pixels) at a device pixel ratio of 1 at 1280, 1000, 760
+    and 520 px. At a ratio of 2 they are within one device pixel (3.7–7%).
+  - Every rounding rule gave identical results at a ratio of 2, because Skia snaps horizontal text
+    baselines to whole device rows. The remaining gap's cause is not isolated. Left as is: a
+    sub-pixel settle on a Retina screen at the handoff frame is not visible.

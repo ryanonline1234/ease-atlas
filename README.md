@@ -207,14 +207,16 @@ Demo: [`src/demos/ink-ridges/default.tsx`](src/demos/ink-ridges/default.tsx).
 
 ## InkHeadline
 
-![InkHeadline: a headline inks into the page word by word, each word wet at the edges before it dries into the real text](docs/ink-headline.gif)
+![InkHeadline: a headline inks into the page word by word; each word's ink bleeds out into the paper, its edge pooling into an outline that fades as it dries into the real text](docs/ink-headline.gif)
 
 Full demo, in both themes: [docs/media/ink-headline-demo.mp4](docs/media/ink-headline-demo.mp4).
 
 A headline that inks itself into the paper, word by word. The ink lands at a
 few points inside each word's letters and soaks along the strokes in reading
-order. While it is wet it wicks a little past the edges along the paper's
-fibers; then it dries back to the crisp letter and swaps to the real text.
+order, then bleeds out into the paper, the spreading edge pooling into a dark
+outline. As the ink dries the bleed and its outline fade, the letter turns
+solid, and it swaps to the real text. The demo sets it in Shippori Mincho, a
+Mincho face drawn from brush calligraphy, loaded from Google Fonts.
 
 ```bash
 npx @21st-dev/cli add @ryanonline1234/ink-headline
@@ -224,9 +226,12 @@ npx @21st-dev/cli add @ryanonline1234/ink-headline
   render (server HTML included), so screen readers, search and copy never wait,
   and the page works without JavaScript. Only the ink is drawn.
 - **The drawn ink sits on the text's own pixels.** The canvas draws each word
-  with the heading's own font at the position the browser laid it out, so the
-  swap to the real text at 90% is one invisible frame. A browser test holds
-  the dry ink and the text to the same pixels at two widths; a 2 px shift fails it.
+  with the heading's own font at the baseline the browser laid out, on a
+  canvas pinned to whole device pixels, so the swap to the real text at 90% is
+  one invisible frame. At a device pixel ratio of 1 the dry ink and the text
+  match exactly at every width tested (1280, 1000, 760, 520 px), and a browser
+  test holds them to it; a 2 px shift fails it. At a ratio of 2 they are
+  within one device pixel.
 - **One WebGL context for every headline on the page**, drawn only while a word
   is wet; afterwards the canvas is hidden.
 - **Follows your type and theme**: the heading's font, size, letter spacing,
@@ -243,10 +248,10 @@ Demo: [`src/demos/ink-headline/default.tsx`](src/demos/ink-headline/default.tsx)
 | `trigger` | `'inView'` | `'inView'` (once, on entering view), `'scroll'` (scrubbed: blank as it enters, written when its center reaches the middle of the viewport), or `'manual'` |
 | `progress` | `0` | 0–1, followed exactly when `trigger` is `'manual'` |
 | `by` | `'word'` | What inks in together: `'word'`, `'line'`, or `'all'` |
-| `duration` | `900` | Time for one word (or line) to soak in, in ms |
-| `stagger` | 120 words / 180 lines | Gap between units in ms; the whole cascade is capped at 1.2 s |
-| `ease` | `'ink'` | Any named curve, a `cubic-bezier()` string, or `'linear'` |
-| `bleed` | `0.6` | How far wet ink wicks past the letters; 0 keeps it inside |
+| `duration` | `1800` | Time for one word (or line) to soak in, bleed and dry, in ms |
+| `stagger` | 240 words / 360 lines | Gap between units in ms; the whole cascade is capped at 2.4 s |
+| `ease` | `'linear'` | How each word's time maps to its progress: `'linear'`, any named curve, or a `cubic-bezier()` string. The stages carry their own curves |
+| `bleed` | `0.6` | How far wet ink bleeds past the letters before it dries back; 0 keeps it inside |
 | `feather` | `0.12` | Softness of the soaking front |
 | `noiseScale` | `2.2` | Size of the ink patches inside a letter: larger is finer |
 | `inkColor` | text color | Color of the ink while it soaks in (match the text, or the swap shows) |

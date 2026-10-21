@@ -81,7 +81,7 @@ describe('ink headline: triggers', () => {
   it('inView inks the words in reading order, then hands off to the text and hides the canvas', async () => {
     const { page, close } = await open()
     const seen: number[][] = []
-    for (let k = 0; k < 80; k++) {
+    for (let k = 0; k < 200; k++) { // the demo's cascade runs about 3 s
       seen.push(await wordOpacities(page))
       if ((await P(page)) >= 1) break
       await page.waitForTimeout(30)

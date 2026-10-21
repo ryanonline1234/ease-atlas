@@ -10,9 +10,9 @@ const settings = {
   by: 'word',
   trigger: 'inView',
   progress: 0.5,
-  duration: 900,
-  stagger: 120,
-  ease: 'ink',
+  duration: 1800,
+  stagger: 240,
+  ease: 'linear',
   bleed: 0.6,
   feather: 0.12,
   noiseScale: 2.2,
@@ -23,6 +23,9 @@ export default function Demo(props: Partial<typeof settings>) {
   const [take, setTake] = useState(0)
   return (
     <div className="flex min-h-[80svh] w-full items-center bg-background px-6 py-20 text-foreground md:px-12">
+      {/* Shippori Mincho: a Mincho face, the type style drawn from brush calligraphy. React 19 hoists this into <head>;
+          where Google Fonts cannot load, the system Mincho (Hiragino on macOS, Yu on Windows) stands in. */}
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500&display=swap" precedence="default" />
       <div className="mx-auto w-full max-w-5xl">
         <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Ink headline · {s.by === 'line' ? 'line by line' : s.by === 'all' ? 'all at once' : 'word by word'}</p>
         <InkHeadline
@@ -37,14 +40,14 @@ export default function Demo(props: Partial<typeof settings>) {
           bleed={s.bleed}
           feather={s.feather}
           noiseScale={s.noiseScale}
-          className="mt-5 font-serif text-6xl font-normal leading-[0.98] tracking-[-0.02em] md:text-8xl"
+          className="mt-5 font-['Shippori_Mincho','Hiragino_Mincho_ProN','Yu_Mincho',YuMincho,ui-serif,Georgia,serif] text-6xl font-medium leading-[1.2] tracking-[0.03em] [word-spacing:0.12em] md:text-8xl"
         >
           {s.text}
         </InkHeadline>
         <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-4">
           <p className="max-w-md text-sm text-muted-foreground">
-            The ink soaks into each word, wicks a little past the letters while it is wet, then dries into the real text: select it, resize
-            it, read it with a screen reader.
+            The ink soaks into each word and bleeds out into the paper, its edge pooling into an outline that fades as it dries
+            into the real text: select it, resize it, read it with a screen reader.
           </p>
           <button
             type="button"

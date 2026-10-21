@@ -41,12 +41,16 @@ Featured component back into review. The InkHero revision draft 48e12df1 stays u
 untouched; the fixes live in this repo only. New components (InkRidges) go up as new drafts;
 publishing one still needs Ryan's go.
 
-1. **Publish InkHeadline?** BUILT and verified 2026-10-20 (`src/components/ui/ink-headline.tsx`, demo
-   `src/demos/ink-headline/default.tsx`, playground `?demo=ink-headline`; 17 unit tests, 7 probes,
-   fresh Next 16 + Vite 8, 21st sandbox render). Cover `registry-uploads/ink-headline-cover.jpg` (4:3),
-   video `docs/media/ink-headline-demo.mp4` (11 s, 4:3, light then dark). Rec: yes after Ryan looks;
-   publish from the prepared draft `1e2382df-5975-4d4f-8332-37266e0f5f08` (`--draft draft:<id> --no-push --auto`), `21st submit ink-headline`, then upload the video through the Edit
-   dialog (memory: 21st-video-media). New component, so the Featured freeze does not apply.
+1. **Publish InkHeadline?** BUILT, then retuned 2026-10-20 on Ryan's notes: bleed with a fading
+   outline, twice as long (1.8 s a word, 240 ms apart), open type, Shippori Mincho in the demo (Google
+   Fonts, system Mincho fallbacks). Verified: unit tests, probes (ink-to-text alignment exact at a device
+   pixel ratio of 1 at four widths; within one device pixel at 2). Cover `registry-uploads/ink-headline-cover.jpg`,
+   video `docs/media/ink-headline-demo.mp4` (10 s, 4:3, light then dark). 21st's sandbox can no longer
+   capture the demo (the font is an outside request); covers are supplied anyway, as for Ink Reveal.
+   Draft `1e2382df-5975-4d4f-8332-37266e0f5f08` (`--draft draft:<id> --no-push --auto`), then
+   `21st submit ink-headline`, then the video through the Edit dialog (memory: 21st-video-media).
+   Rec: publish after Ryan looks at `?demo=ink-headline`. New component, so the Featured freeze does
+   not apply.
 2. **InkLake** (a lake with reflections, its own component): first in line for a second set, which K6
    allows only after K3 (2026-12-19) and K4 (2027-01-18) pass. Not built or published before then.
 3. Monthly metrics capture on 2026-11-01: `node scripts/capture-metrics.mjs` + Studio screenshot.
