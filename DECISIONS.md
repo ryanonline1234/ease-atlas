@@ -566,3 +566,35 @@ Ryan: "go with recs" on:
 4. Triggers: in view by default, plus scroll and manual.
 5. Freeze: Ink Reveal and Ink Ridges join Ink Hero. No revisions while Featured, since a revision
    sends a component back into review.
+
+## 2026-10-20 — InkHeadline built
+- **How it draws:** the heading renders real words (spans) and an aria-hidden canvas overlay. A mask
+  canvas holds the glyphs, drawn with the heading's own computed font at the browser's layout
+  positions (red channel), and each word's unit index (green).
+- **The mask's word tiles never overlap.** Lines split halfway through any overlap of their boxes;
+  words split halfway across the space between them. The fills are opaque and land on whole device
+  pixels. The first version padded each word's box: with leading under 1, line two's padding claimed
+  the bottom of line one, cutting those letters off. Its anti-aliased edges also produced
+  out-of-range indices.
+- **Gradients avoided:** the reading-order lean comes from per-unit spans passed as uniforms, not a
+  gradient channel, because canvas gradients may be dithered.
+- **Wet look:** a ragged dilation of the glyph edge, from a mip-blurred mask plus fbm, that pulls
+  back as the ink dries. Fibers sit only right at the edge, and on dark paper (light ink) they are
+  shorter, as in Ink Reveal. A first try used a blurred halo, which read as a drop shadow, and
+  fibers across the whole halo, which read as scribbles.
+- **Handoff is a one-frame swap at p = 0.9,** after the ink has dried solid. Measured at dpr 1:
+  canvas ink and DOM text differ by 0.01–0.02 of 255 per pixel, best offset (0, 0), and ink totals
+  agree within 0.05%. A crossfade either dimmed the letters midway (both layers fading) or thickened
+  their anti-aliased edges (text fading in under full ink). The probe holds dry ink and text to
+  under 3% mismatched inked pixels at 1280 and 760 px wide; a 2 px shift gives over 20%.
+- **Timing:** 900 ms per word on the ink curve; 120 ms between words and 180 ms between lines (the
+  sumi-e cluster and poem-line staggers in awwwards-motion's table). The cascade is capped at 1.2 s
+  (motion-priors §6.4, fix the total).
+- **Measured:**
+  - Real GPU (M1 Pro, 120 Hz), four replays: the only slow frames are 17–84 ms after each replay
+    starts (remount: font metrics, mask upload, mipmaps). The reveal itself holds 8.3 ms.
+  - Unit tests: 17 for InkHeadline, 101 in all. The positive control (overlapping tiles) fails two of them.
+  - Probes: 7 for InkHeadline, 65 in all.
+  - Fresh Next.js 16 (text present in the server HTML) and Vite 8 projects: inks in, every word ends
+    visible, the canvas ends hidden, clean console.
+  - 21st's sandbox renders it.

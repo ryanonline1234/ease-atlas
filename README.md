@@ -22,6 +22,13 @@ paper color correctly without shadcn/ui theme tokens; a cross-origin image
 without CORS headers is shown in a plain frame instead of leaving the hero
 blank; and with no image at all the dissolve paints ink ridges.
 
+Three components of the set are Featured on 21st.dev: Ink Hero,
+[Ink Reveal](https://21st.dev/@ryanonline1234/components/ink-reveal) (an image
+card that develops like ink soaking into paper) and
+[Ink Ridges](https://21st.dev/@ryanonline1234/components/ink-ridges) (a sumi-e
+mountain range that paints itself in). The fifth, InkHeadline, inks a heading
+into the page word by word.
+
 Part of a small set of web-motion primitives for React built on measured
 easing constants rather than invented ones. EaseAtlas, the curve instrument,
 is published by link only:
@@ -198,6 +205,55 @@ Demo: [`src/demos/ink-ridges/default.tsx`](src/demos/ink-ridges/default.tsx).
 | `label` | — | Accessible description; without it the canvas is decoration |
 | `children` | — | Content laid over the landscape |
 
+## InkHeadline
+
+![InkHeadline: a headline inks into the page word by word, each word wet at the edges before it dries into the real text](docs/ink-headline.gif)
+
+Full demo, in both themes: [docs/media/ink-headline-demo.mp4](docs/media/ink-headline-demo.mp4).
+
+A headline that inks itself into the paper, word by word. The ink lands at a
+few points inside each word's letters and soaks along the strokes in reading
+order. While it is wet it wicks a little past the edges along the paper's
+fibers; then it dries back to the crisp letter and swaps to the real text.
+
+```bash
+npx @21st-dev/cli add @ryanonline1234/ink-headline
+```
+
+- **Real text the whole time.** The words are in the heading from the first
+  render (server HTML included), so screen readers, search and copy never wait,
+  and the page works without JavaScript. Only the ink is drawn.
+- **The drawn ink sits on the text's own pixels.** The canvas draws each word
+  with the heading's own font at the position the browser laid it out, so the
+  swap to the real text at 90% is one invisible frame. A browser test holds
+  the dry ink and the text to the same pixels at two widths; a 2 px shift fails it.
+- **One WebGL context for every headline on the page**, drawn only while a word
+  is wet; afterwards the canvas is hidden.
+- **Follows your type and theme**: the heading's font, size, letter spacing,
+  text transform and color.
+- **Reduced motion and no WebGL2** show the plain heading.
+
+Single file: [`src/components/ui/ink-headline.tsx`](src/components/ui/ink-headline.tsx).
+Demo: [`src/demos/ink-headline/default.tsx`](src/demos/ink-headline/default.tsx).
+
+| Prop | Default | What it does |
+|---|---|---|
+| `children` | — | The headline text; `\n` forces a line break |
+| `as` | `'h2'` | `'h1'`–`'h4'`, `'p'` or `'div'` |
+| `trigger` | `'inView'` | `'inView'` (once, on entering view), `'scroll'` (scrubbed: blank as it enters, written when its center reaches the middle of the viewport), or `'manual'` |
+| `progress` | `0` | 0–1, followed exactly when `trigger` is `'manual'` |
+| `by` | `'word'` | What inks in together: `'word'`, `'line'`, or `'all'` |
+| `duration` | `900` | Time for one word (or line) to soak in, in ms |
+| `stagger` | 120 words / 180 lines | Gap between units in ms; the whole cascade is capped at 1.2 s |
+| `ease` | `'ink'` | Any named curve, a `cubic-bezier()` string, or `'linear'` |
+| `bleed` | `0.6` | How far wet ink wicks past the letters; 0 keeps it inside |
+| `feather` | `0.12` | Softness of the soaking front |
+| `noiseScale` | `2.2` | Size of the ink patches inside a letter: larger is finer |
+| `inkColor` | text color | Color of the ink while it soaks in (match the text, or the swap shows) |
+| `once` | `true` | inView: stay written, or fade back when scrolled away |
+
+The progress is published as the CSS variable `--ink-headline` (0–1) on the heading.
+
 ## EaseAtlas
 
 A grid of 24 named easing curves. Each cell draws the curve as an SVG glyph and
@@ -245,10 +301,10 @@ targets.
 ## Verification
 
 ```bash
-npm test            # 43 unit tests: parsers, samplers, the score's track table, atlas integrity, copy text, component behaviour
+npm test            # 101 unit tests across the five components: parsers, curves, timelines, the shaders' JS twins, layout maths
 npm run typecheck
-npm run probe       # Chromium: the atlas ride measured against f(t); the hero's shader/context/console checks, reduced-motion page, theme captures
-npm run dev         # playground at http://localhost:5178 (?demo=ink-hero or ?demo=ease-atlas, &dark=1 for dark)
+npm run probe       # Chromium: every component driven for real (contexts, triggers, alignment, fallbacks, reduced motion)
+npm run dev         # playground (?demo=ink-hero, ink-reveal, ink-ridges, ink-headline or ease-atlas; &dark=1 for dark)
 ```
 
 The hero is measured, not eyeballed, with the awwwards-motion harness. The scroll
@@ -291,12 +347,12 @@ always share the same stops.
 
 ## The set
 
-1. **InkHero**: built, Featured on 21st.dev.
+1. **InkHero**: Featured on 21st.dev.
 2. **EaseAtlas**: built, published by link only (review came back "needs changes";
    not pursued).
-3. **InkReveal**: built.
-4. **InkRidges**: built (replaces ScrollScore, which stays an internal helper).
-5. **InkHeadline** (working name): a headline that inks into the paper word by word, then hands off to the real text. Replaces MaskReveal (2026-10-20).
+3. **InkReveal**: Featured on 21st.dev.
+4. **InkRidges**: Featured on 21st.dev (replaces ScrollScore, which stays an internal helper).
+5. **InkHeadline**: built; a headline that inks into the paper word by word, then hands off to the real text. Replaces MaskReveal (2026-10-20).
 
 ## Non-negotiables
 

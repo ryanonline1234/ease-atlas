@@ -41,8 +41,12 @@ Featured component back into review. The InkHero revision draft 48e12df1 stays u
 untouched; the fixes live in this repo only. New components (InkRidges) go up as new drafts;
 publishing one still needs Ryan's go.
 
-1. **Build InkHeadline**, the fifth component (Ryan, 2026-10-20: replaces MaskReveal). Design brief and
-   open choices are in DECISIONS (2026-10-20); build starts on Ryan's go.
+1. **Publish InkHeadline?** BUILT and verified 2026-10-20 (`src/components/ui/ink-headline.tsx`, demo
+   `src/demos/ink-headline/default.tsx`, playground `?demo=ink-headline`; 17 unit tests, 7 probes,
+   fresh Next 16 + Vite 8, 21st sandbox render). Cover `registry-uploads/ink-headline-cover.jpg` (4:3),
+   video `docs/media/ink-headline-demo.mp4` (11 s, 4:3, light then dark). Rec: yes after Ryan looks;
+   publish from the prepared draft, `21st submit ink-headline`, then upload the video through the Edit
+   dialog (memory: 21st-video-media). New component, so the Featured freeze does not apply.
 2. **InkLake** (a lake with reflections, its own component): first in line for a second set, which K6
    allows only after K3 (2026-12-19) and K4 (2027-01-18) pass. Not built or published before then.
 3. Monthly metrics capture on 2026-11-01: `node scripts/capture-metrics.mjs` + Studio screenshot.
